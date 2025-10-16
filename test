@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qualitätsprüfung - Tablet Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Login Screen */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        }
+
+        .login-box {
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            min-width: 400px;
+        }
+
+        .login-box h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #bdc3c7;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: border 0.3s;
+        }
+
+        .login-box input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52,152,219,0.4);
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            height: 100vh;
+            background: #ecf0f1;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 100px;
+            background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 10px;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .user-profile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3498db, #2ecc71);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .user-name {
+            color: white;
+            font-size: 11px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .sidebar-btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 12px;
+            margin: 8px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            color: white;
+            font-size: 24px;
+        }
+
+        .sidebar-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.05);
+        }
+
+        .undo-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            background: rgba(231, 76, 60, 0.9);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            color: white;
+            font-size: 24px;
+        }
+
+        .undo-btn:hover {
+            background: rgba(192, 57, 43, 1);
+            transform: scale(1.05);
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .content-grid {
+            display: grid;
+            gap: 20px;
+            height: calc(100vh - 60px);
+        }
+
+        .grid-2 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+
+        .grid-4 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+
+        .big-btn {
+            background: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 28px;
+            font-weight: 600;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .big-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            background: linear-gradient(135deg, #3498db 0%, #2ecc71 100%);
+            color: white;
+        }
+
+        /* Pause Screen */
+        .pause-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(231, 76, 60, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            color: white;
+        }
+
+        .pause-screen h1 {
+            font-size: 48px;
+            margin-bottom: 30px;
+        }
+
+        .pause-time {
+            font-size: 36px;
+            margin-bottom: 50px;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-content h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .modal-content p {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #bdc3c7;
+            background: white;
+            color: #2c3e50;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-secondary:hover {
+            border-color: #95a5a6;
+            background: #ecf0f1;
+        }
+
+        /* Input Container */
+        .input-container {
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 100px auto;
+        }
+
+        .input-container h2 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .input-container input {
+            width: 100%;
+            padding: 20px;
+            font-size: 24px;
+            border: 2px solid #bdc3c7;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: 3px;
+        }
+
+        /* Container Number Input Grid */
+        .container-input-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .container-digit {
+            width: 100%;
+            aspect-ratio: 1;
+            padding: 0;
+            font-size: 36px;
+            border: 3px solid #bdc3c7;
+            border-radius: 15px;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .container-digit:focus {
+            outline: none;
+            border-color: #3498db;
+            background: #ebf5fb;
+            transform: scale(1.05);
+        }
+
+        /* Data Confirmation Box */
+        .data-confirmation {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            margin: 100px auto;
+        }
+
+        .data-confirmation h2 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .data-label {
+            font-weight: 600;
+            color: #7f8c8d;
+        }
+
+        .data-value {
+            font-size: 24px;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+
+        /* Scan Simulation */
+        .scan-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: calc(100vh - 60px);
+        }
+
+        .scan-animation {
+            width: 300px;
+            height: 300px;
+            border: 4px solid #3498db;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+            background: white;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(52,152,219,0.5); }
+            50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(52,152,219,0.8); }
+        }
+
+        /* Inspection Interface */
+        .inspection-container {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 20px;
+            height: calc(100vh - 60px);
+        }
+
+        .info-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .info-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .info-card h3 {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        }
+
+        .info-card p {
+            font-size: 24px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .defect-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .defect-btn {
+            background: white;
+            border: 3px solid #3498db;
+            border-radius: 15px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .defect-btn:hover {
+            background: #3498db;
+            color: white;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(52,152,219,0.3);
+        }
+
+        .defect-btn h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .defect-counter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #e74c3c;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .action-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .action-btn {
+            padding: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .btn-complete {
+            background: #27ae60;
+        }
+
+        .btn-complete:hover {
+            background: #229954;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(39,174,96,0.3);
+        }
+
+        .btn-reset {
+            background: #e67e22;
+        }
+
+        .btn-reset:hover {
+            background: #d35400;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(230,126,34,0.3);
+        }
+
+        .btn-next {
+            background: #3498db;
+        }
+
+        .btn-next:hover {
+            background: #2980b9;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(52,152,219,0.3);
+        }
+
+        .inspector-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: blink 2s infinite;
+        }
+
+        .status-active {
+            background: #27ae60;
+        }
+
+        .status-finished {
+            background: #95a5a6;
+            animation: none;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <h1 id="loginTitle">Qualitätsprüfung</h1>
+            <input type="text" id="personnelNumber" placeholder="Personalnummer" maxlength="10">
+            <button class="btn-primary" onclick="login()" id="loginBtn">Anmelden</button>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="main-container hidden">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="user-profile">
+                <div class="user-avatar">👤</div>
+                <div class="user-name" id="userName">Prüfer</div>
+            </div>
+            
+            <button class="sidebar-btn" onclick="openStatistics()" title="Statistik">📊</button>
+            <button class="sidebar-btn" onclick="toggleLanguage()" title="Sprache" id="languageBtn">🇩🇪</button>
+            <button class="sidebar-btn" onclick="togglePause()" title="Pause">⏸️</button>
+            
+            <button class="undo-btn" onclick="goBack()" title="Zurück">↶</button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content" id="contentArea"></div>
+    </div>
+
+    <!-- Pause Screen -->
+    <div id="pauseScreen" class="pause-screen hidden">
+        <h1 id="pauseTitle">ABWESEND</h1>
+        <div class="pause-time" id="pauseTime">seit 00:00:00</div>
+        <button class="btn-primary" onclick="togglePause()" id="returnBtn">Wieder anwesend</button>
+    </div>
+
+    <script>
+        // Global State
+        let state = {
+            language: 'de',
+            personnelNumber: '',
+            userName: '',
+            isPaused: false,
+            pauseStart: null,
+            currentScreen: 'main',
+            history: [],
+            currentInspection: {
+                articleNumber: '',
+                tz: 0,
+                containerNumber: '',
+                quantity: 0,
+                inspectionType: '',
+                defects: {},
+                totalDefects: 0
+            }
+        };
+
+        // Translations
+        const translations = {
+            de: {
+                loginTitle: 'Qualitätsprüfung',
+                personnelPlaceholder: 'Personalnummer',
+                loginBtn: 'Anmelden',
+                serie: 'Serie',
+                sonderfall: 'Sonderfall',
+                sicht: 'Sicht',
+                sonstiges: 'Sonstiges',
+                lehre: 'Lehre',
+                mass: 'Maß',
+                scanComplete: 'Scan abgeschlossen',
+                containerNumber: 'Behälternummer eingeben',
+                confirm: 'Bestätigen',
+                quantity: 'Teileanzahl',
+                fullContainer: 'Voller Behälter (200 Teile)',
+                manual: 'Manuell eingeben',
+                articleNumber: 'Artikelnummer',
+                totalQuantity: 'Gesamtmenge',
+                defectCount: 'Ausschuss',
+                inspector: 'Prüfer',
+                inspectionComplete: 'Prüfung abgeschlossen',
+                resetInspection: 'Prüfung zurücksetzen',
+                nextInspection: 'Nächste Prüfung',
+                pauseTitle: 'ABWESEND',
+                returnBtn: 'Wieder anwesend',
+                featureNotAvailable: 'Feature nicht verfügbar',
+                featureInProgress: 'Feature in Arbeit',
+                active: 'Aktiv',
+                finished: 'Fertig'
+            },
+            pl: {
+                loginTitle: 'Kontrola Jakości',
+                personnelPlaceholder: 'Numer personelu',
+                loginBtn: 'Zaloguj się',
+                serie: 'Seria',
+                sonderfall: 'Przypadek specjalny',
+                sicht: 'Wzrok',
+                sonstiges: 'Inne',
+                lehre: 'Szablon',
+                mass: 'Wymiar',
+                scanComplete: 'Skanowanie zakończone',
+                containerNumber: 'Wprowadź numer kontenera',
+                confirm: 'Potwierdź',
+                quantity: 'Ilość części',
+                fullContainer: 'Pełny kontener (200 części)',
+                manual: 'Wprowadź ręcznie',
+                articleNumber: 'Numer artykułu',
+                totalQuantity: 'Całkowita ilość',
+                defectCount: 'Złom',
+                inspector: 'Inspektor',
+                inspectionComplete: 'Kontrola zakończona',
+                resetInspection: 'Resetuj kontrolę',
+                nextInspection: 'Następna kontrola',
+                pauseTitle: 'NIEOBECNY',
+                returnBtn: 'Z powrotem',
+                featureNotAvailable: 'Funkcja niedostępna',
+                featureInProgress: 'Funkcja w toku',
+                active: 'Aktywny',
+                finished: 'Zakończone'
+            }
+        };
+
+        function t(key) {
+            return translations[state.language][key] || key;
+        }
+
+        // Login
+        function login() {
+            const input = document.getElementById('personnelNumber');
+            if (input.value.trim()) {
+                state.personnelNumber = input.value.trim();
+                state.userName = 'P-' + state.personnelNumber;
+                document.getElementById('userName').textContent = state.userName;
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                showMainMenu();
+            }
+        }
+
+        // Language Toggle
+        function toggleLanguage() {
+            state.language = state.language === 'de' ? 'pl' : 'de';
+            const flagBtn = document.getElementById('languageBtn');
+            flagBtn.textContent = state.language === 'de' ? '🇩🇪' : '🇵🇱';
+            updateLanguage();
+        }
+
+        function updateLanguage() {
+            document.getElementById('loginTitle').textContent = t('loginTitle');
+            document.getElementById('personnelNumber').placeholder = t('personnelPlaceholder');
+            document.getElementById('loginBtn').textContent = t('loginBtn');
+            document.getElementById('pauseTitle').textContent = t('pauseTitle');
+            document.getElementById('returnBtn').textContent = t('returnBtn');
+            
+            // Reload current screen with new language
+            const currentScreen = state.currentScreen;
+            if (currentScreen === 'main') showMainMenu();
+            else if (currentScreen === 'serie') showSerieMenu();
+        }
+
+        // Pause
+        function togglePause() {
+            state.isPaused = !state.isPaused;
+            const pauseScreen = document.getElementById('pauseScreen');
+            
+            if (state.isPaused) {
+                state.pauseStart = new Date();
+                pauseScreen.classList.remove('hidden');
+                updatePauseTime();
+            } else {
+                pauseScreen.classList.add('hidden');
+                state.pauseStart = null;
+            }
+        }
+
+        function updatePauseTime() {
+            if (!state.isPaused) return;
+            
+            const now = new Date();
+            const diff = now - state.pauseStart;
+            const hours = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            
+            document.getElementById('pauseTime').textContent = 
+                `seit ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            setTimeout(updatePauseTime, 1000);
+        }
+
+        // Navigation
+        function goBack() {
+            if (state.history.length > 0) {
+                const previous = state.history.pop();
+                previous();
+            }
+        }
+
+        function addToHistory(fn) {
+            state.history.push(fn);
+        }
+
+        function openStatistics() {
+            window.open('https://toxic-pisces.github.io/haering/testt.html', '_blank');
+        }
+
+        // Main Menu
+        function showMainMenu() {
+            state.currentScreen = 'main';
+            state.history = [];
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div class="content-grid grid-2">
+                    <button class="big-btn" onclick="showSerieMenu()">${t('serie')}</button>
+                    <button class="big-btn" onclick="showFeatureNotAvailable()">${t('sonderfall')}</button>
+                </div>
+            `;
+        }
+
+        // Serie Menu
+        function showSerieMenu() {
+            addToHistory(showMainMenu);
+            state.currentScreen = 'serie';
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div class="content-grid grid-4">
+                    <button class="big-btn" onclick="showFeatureInProgress()">${t('sicht')}</button>
+                    <button class="big-btn" onclick="showFeatureInProgress()">${t('sonstiges')}</button>
+                    <button class="big-btn" onclick="startInspection('lehre')">${t('lehre')}</button>
+                    <button class="big-btn" onclick="startInspection('mass')">${t('mass')}</button>
+                </div>
+            `;
+        }
+
+        // Start Inspection
+        function startInspection(type) {
+            addToHistory(showSerieMenu);
+            state.currentInspection.inspectionType = type;
+            showScanSimulation();
+        }
+
+        function showScanSimulation() {
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div class="scan-container">
+                    <div class="scan-animation">📷</div>
+                    <button class="btn-primary" onclick="completeScan()" style="width: 300px;">${t('scanComplete')}</button>
+                </div>
+            `;
+        }
+
+        function completeScan() {
+            state.currentInspection.articleNumber = '1234567';
+            state.currentInspection.tz = Math.floor(Math.random() * 11);
+            showScanConfirmation();
+        }
+
+        // Scan Confirmation
+        function showScanConfirmation() {
+            addToHistory(showScanSimulation);
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div class="data-confirmation">
+                    <h2>Teilebegleitkarte gescannt</h2>
+                    <div class="data-row">
+                        <span class="data-label">Artikelnummer:</span>
+                        <span class="data-value">${state.currentInspection.articleNumber}</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">TZ:</span>
+                        <span class="data-value">${state.currentInspection.tz}</span>
+                    </div>
+                    <button class="btn-primary" onclick="showContainerInput()">${t('confirm')}</button>
+                </div>
+            `;
+        }
+
+        // Container Input
+        function showContainerInput() {
+            addToHistory(showScanConfirmation);
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div class="input-container">
+                    <h2>${t('containerNumber')}</h2>
+                    <div class="container-input-grid">
+                        <input type="text" class="container-digit" id="digit0" maxlength="1" pattern="[0-9]">
+                        <input type="text" class="container-digit" id="digit1" maxlength="1" pattern="[0-9]">
+                        <input type="text" class="container-digit" id="digit2" maxlength="1" pattern="[0-9]">
+                        <input type="text" class="container-digit" id="digit3" maxlength="1" pattern="[0-9]">
+                        <input type="text" class="container-digit" id="digit4" maxlength="1" pattern="[0-9]">
+                        <input type="text" class="container-digit" id="digit5" maxlength="1" pattern="[0-9]">
+                    </div>
+                    <button class="btn-primary" onclick="submitContainer()">${t('confirm')}</button>
+                </div>
+            `;
+            
+            // Setup auto-focus and navigation
+            for (let i = 0; i < 6; i++) {
+                const input = document.getElementById(`digit${i}`);
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1 && i < 5) {
+                        document.getElementById(`digit${i + 1}`).focus();
+                    }
+                });
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && e.target.value === '' && i > 0) {
+                        document.getElementById(`digit${i - 1}`).focus();
+                    }
+                });
+            }
+            
+            document.getElementById('digit0').focus();
+        }
+
+        function submitContainer() {
+            let containerNumber = '';
+            for (let i = 0; i < 6; i++) {
+                const digit = document.getElementById(`digit${i}`).value;
+                if (!digit) {
+                    // Not all digits entered - go back
+                    goBack();
+                    return;
+                }
+                containerNumber += digit;
+            }
+            state.currentInspection.containerNumber = containerNumber;
+            showQuantitySelection();
+        }
+
+        // Quantity Selection
+        function showQuantitySelection() {
+            addToHistory(showContainerInput);
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div class="content-grid grid-2">
+                    <button class="big-btn" onclick="setQuantity(200)">${t('fullContainer')}</button>
+                    <button class="big-btn" onclick="showManualQuantity()">${t('manual')}</button>
+                </div>
+            `;
+        }
+
+        function setQuantity(qty) {
+            state.currentInspection.quantity = qty;
+            state.currentInspection.defects = {};
+            state.currentInspection.totalDefects = 0;
+            showInspectionInterface();
+        }
+
+        function showManualQuantity() {
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div class="input-container">
+                    <h2>${t('quantity')}</h2>
+                    <input type="number" id="quantityInput" min="1" max="999">
+                    <button class="btn-primary" onclick="submitManualQuantity()">${t('confirm')}</button>
+                </div>
+            `;
+            document.getElementById('quantityInput').focus();
+        }
+
+        function submitManualQuantity() {
+            const input = document.getElementById('quantityInput');
+            const qty = parseInt(input.value);
+            if (qty > 0) {
+                setQuantity(qty);
+            } else {
+                // No valid input - go back
+                goBack();
+            }
+        }
+
+        // Inspection Interface
+        function showInspectionInterface() {
+            addToHistory(showQuantitySelection);
+            const type = state.currentInspection.inspectionType;
+            const otherType = type === 'lehre' ? t('mass') : t('lehre');
+            const otherStatus = Math.random() > 0.5 ? 'active' : 'finished';
+            
+            const defectTypes = type === 'lehre' ? 
+                ['Maßabweichung', 'Formfehler', 'Positionsfehler'] :
+                ['Oberflächenfehler', 'Kantenqualität', 'Beschädigung'];
+            
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div class="inspection-container">
+                    <div class="info-row">
+                        <div class="info-card">
+                            <h3>${t('articleNumber')}</h3>
+                            <p>${state.currentInspection.articleNumber}</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>${t('totalQuantity')}</h3>
+                            <p>${state.currentInspection.quantity}</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>${t('defectCount')}</h3>
+                            <p id="totalDefects">0</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>${t('inspector')} (${otherType})</h3>
+                            <p class="inspector-status">
+                                <span class="status-indicator status-${otherStatus}"></span>
+                                ${state.currentInspection.inspectionType === 'lehre' ? 'Maß' : 'Lehre'} - ${state.currentInspection.tz}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="defect-grid">
+                        ${defectTypes.map((defect, i) => `
+                            <button class="defect-btn" onclick="registerDefect('${defect}')">
+                                <span class="defect-counter" id="counter-${i}">0</span>
+                                <h3>${defect}</h3>
+                            </button>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="action-row">
+                        <button class="action-btn btn-complete" onclick="completeInspection()">${t('inspectionComplete')}</button>
+                        <button class="action-btn btn-reset" onclick="resetInspection()">${t('resetInspection')}</button>
+                        <button class="action-btn btn-next" onclick="nextInspection()">${t('nextInspection')}</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function registerDefect(type) {
+            if (!state.currentInspection.defects[type]) {
+                state.currentInspection.defects[type] = 0;
+            }
+            state.currentInspection.defects[type]++;
+            state.currentInspection.totalDefects++;
+            
+            // Update UI
+            updateDefectCounters();
+        }
+
+        function updateDefectCounters() {
+            const defectTypes = state.currentInspection.inspectionType === 'lehre' ? 
+                ['Maßabweichung', 'Formfehler', 'Positionsfehler'] :
+                ['Oberflächenfehler', 'Kantenqualität', 'Beschädigung'];
+            
+            defectTypes.forEach((type, i) => {
+                const counter = document.getElementById(`counter-${i}`);
+                if (counter) {
+                    counter.textContent = state.currentInspection.defects[type] || 0;
+                }
+            });
+            
+            document.getElementById('totalDefects').textContent = state.currentInspection.totalDefects;
+        }
+
+        // Complete Inspection
+        function completeInspection() {
+            const good = state.currentInspection.quantity - state.currentInspection.totalDefects;
+            const bad = state.currentInspection.totalDefects;
+            
+            showModal({
+                title: t('inspectionComplete'),
+                content: `
+                    <p><strong>Gut:</strong> ${good} Teile</p>
+                    <p><strong>Schlecht:</strong> ${bad} Teile</p>
+                    <p style="margin-top: 20px;">Ergebnisse werden gespeichert...</p>
+                `,
+                buttons: [
+                    { text: t('confirm'), action: () => { closeModal(); showMainMenu(); } }
+                ]
+            });
+        }
+
+        // Reset Inspection
+        function resetInspection() {
+            showModal({
+                title: 'Warnung',
+                content: '<p>Möchten Sie die aktuelle Prüfung wirklich zurücksetzen? Alle Daten gehen verloren.</p>',
+                buttons: [
+                    { text: 'Abbrechen', action: closeModal },
+                    { text: 'Zurücksetzen', action: () => {
+                        closeModal();
+                        showMainMenu();
+                    }}
+                ]
+            });
+        }
+
+        // Next Inspection
+        function nextInspection() {
+            const good = state.currentInspection.quantity - state.currentInspection.totalDefects;
+            const bad = state.currentInspection.totalDefects;
+            
+            showModal({
+                title: t('nextInspection'),
+                content: `
+                    <p><strong>Gut:</strong> ${good} Teile</p>
+                    <p><strong>Schlecht:</strong> ${bad} Teile</p>
+                    <p style="margin-top: 20px; color: #27ae60;">✓ Ergebnisse gespeichert</p>
+                    <p style="margin-top: 20px;">Was möchten Sie als nächstes tun?</p>
+                `,
+                buttons: [
+                    { text: 'Neue Teilebegleitkarte', action: () => { closeModal(); showSerieMenu(); } },
+                    { text: 'Neuer Behälter', action: () => { closeModal(); showContainerInput(); } }
+                ]
+            });
+        }
+
+        // Modal System
+        function showModal(config) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'activeModal';
+            
+            const buttonsHtml = config.buttons.map((btn, index) => 
+                `<button class="btn-secondary" onclick="executeModalAction(${index})">${btn.text}</button>`
+            ).join('');
+            
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h2>${config.title}</h2>
+                    ${config.content}
+                    <div class="modal-buttons">
+                        ${buttonsHtml}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Store actions in a temporary array
+            window.currentModalActions = config.buttons.map(btn => btn.action);
+        }
+
+        function executeModalAction(index) {
+            if (window.currentModalActions && window.currentModalActions[index]) {
+                window.currentModalActions[index]();
+            }
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('activeModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Feature Modals
+        function showFeatureNotAvailable() {
+            showModal({
+                title: t('featureNotAvailable'),
+                content: '<p>Diese Funktion ist derzeit nicht verfügbar.</p>',
+                buttons: [
+                    { text: 'OK', action: closeModal }
+                ]
+            });
+        }
+
+        function showFeatureInProgress() {
+            showModal({
+                title: t('featureInProgress'),
+                content: '<p>Diese Funktion ist aktuell in Entwicklung.</p>',
+                buttons: [
+                    { text: 'OK', action: closeModal }
+                ]
+            });
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Enable Enter key for login
+            document.getElementById('personnelNumber').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') login();
+            });
+        });
+    </script>
+</body>
+</html>
