@@ -696,64 +696,58 @@
             justify-content: center;
             position: relative;
             min-height: 200px;
-            overflow: visible;
+            overflow: hidden;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* Fill animation layer */
         .defect-btn::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transform: scale(0);
+            transition: none;
             z-index: 0;
             border-radius: 14px;
         }
 
-        .defect-btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 70%);
-            transform: translate(-50%, -50%);
-            opacity: 0;
-            pointer-events: none;
-            z-index: 10;
+        .defect-btn.filling::before {
+            animation: fillButton 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
-        .defect-btn.touch-active::after {
-            animation: touchRipple 0.6s ease-out;
-        }
-
-        @keyframes touchRipple {
+        @keyframes fillButton {
             0% {
-                width: 0;
-                height: 0;
-                opacity: 1;
+                opacity: 0;
+                transform: scale(0);
             }
             100% {
-                width: 400px;
-                height: 400px;
-                opacity: 0;
+                opacity: 1;
+                transform: scale(1);
             }
         }
 
-        .defect-btn:hover::before {
+        /* Hover gradient (blue) - only when not filling */
+        .defect-btn:hover:not(.filling)::before {
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
             opacity: 1;
+            transform: scale(1);
+            transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
         .defect-btn > * {
             position: relative;
             z-index: 1;
+            transition: color 0.3s ease;
         }
 
-        .defect-btn:hover {
+        .defect-btn.filling > * {
+            color: white;
+        }
+
+        .defect-btn:hover:not(.filling) {
             border-color: transparent;
             color: white;
             transform: translateY(-6px) scale(1.02);
@@ -761,27 +755,62 @@
         }
 
         .defect-btn:active {
-            transform: scale(0.95);
+            transform: scale(0.98);
             transition: all 0.1s;
         }
 
-        .defect-btn.touch-feedback {
-            animation: touchFeedback 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        /* Pop/burst animation on release */
+        .defect-btn.popping {
+            animation: popBurst 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        @keyframes touchFeedback {
+        @keyframes popBurst {
             0% {
                 transform: scale(1);
             }
             25% {
-                transform: scale(0.92);
+                transform: scale(1.15);
+                box-shadow: 0 0 0 0px rgba(239, 68, 68, 0.6);
             }
             50% {
-                transform: scale(1.08);
-                box-shadow: 0 20px 50px rgba(42, 82, 152, 0.4), 0 0 0 8px rgba(42, 82, 152, 0.2);
+                transform: scale(0.95);
+                box-shadow: 0 0 0 20px rgba(239, 68, 68, 0);
+            }
+            75% {
+                transform: scale(1.05);
             }
             100% {
                 transform: scale(1);
+                box-shadow: 0 0 0 0px rgba(239, 68, 68, 0);
+            }
+        }
+
+        /* Particles effect */
+        .defect-btn::after {
+            content: '';
+            position: absolute;
+            inset: -20px;
+            background: radial-gradient(circle, transparent 30%, rgba(239, 68, 68, 0) 31%, rgba(239, 68, 68, 0.4) 32%, rgba(239, 68, 68, 0) 33%),
+                        radial-gradient(circle, transparent 30%, rgba(239, 68, 68, 0) 31%, rgba(239, 68, 68, 0.3) 32%, rgba(239, 68, 68, 0) 33%);
+            background-size: 30px 30px, 40px 40px;
+            background-position: 0 0, 20px 20px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .defect-btn.popping::after {
+            animation: burstParticles 0.5s ease-out;
+        }
+
+        @keyframes burstParticles {
+            0% {
+                opacity: 1;
+                transform: scale(0.5);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(2);
             }
         }
 
@@ -1581,7 +1610,13 @@
 
                     <div class="defect-grid">
                         ${defectTypes.map((defect, i) => `
-                            <button class="defect-btn animate-scale stagger-${(i % 4) + 1}" onclick="registerDefect('${defect}', event)">
+                            <button class="defect-btn animate-scale stagger-${(i % 4) + 1}"
+                                    onmousedown="handleDefectPress('${defect}', event)"
+                                    onmouseup="handleDefectRelease(event)"
+                                    onmouseleave="handleDefectRelease(event)"
+                                    ontouchstart="handleDefectPress('${defect}', event)"
+                                    ontouchend="handleDefectRelease(event)"
+                                    ontouchcancel="handleDefectRelease(event)">
                                 <span class="defect-counter" id="counter-${i}">0</span>
                                 <h3>${defect}</h3>
                             </button>
@@ -1657,25 +1692,48 @@
             }
         }
 
-        function registerDefect(type, event) {
-            // Get the button element
-            const button = event ? event.currentTarget : null;
+        // Store press timers
+        let pressTimer = null;
+        let pressedButton = null;
 
-            // Add touch feedback animations
-            if (button) {
-                // Add ripple effect
-                button.classList.add('touch-active');
-                setTimeout(() => {
-                    button.classList.remove('touch-active');
-                }, 600);
+        function handleDefectPress(type, event) {
+            const button = event.currentTarget;
+            pressedButton = button;
 
-                // Add bounce feedback
-                button.classList.add('touch-feedback');
-                setTimeout(() => {
-                    button.classList.remove('touch-feedback');
-                }, 400);
+            // Start fill animation
+            button.classList.add('filling');
+
+            // Set timer for 1 second
+            pressTimer = setTimeout(() => {
+                // After 1 second, register the defect
+                completeDefectRegistration(type, button);
+            }, 1000);
+        }
+
+        function handleDefectRelease(event) {
+            if (pressTimer) {
+                clearTimeout(pressTimer);
+                pressTimer = null;
             }
 
+            if (pressedButton) {
+                // Remove filling class
+                pressedButton.classList.remove('filling');
+                pressedButton = null;
+            }
+        }
+
+        function completeDefectRegistration(type, button) {
+            // Remove filling class
+            button.classList.remove('filling');
+
+            // Add pop/burst animation
+            button.classList.add('popping');
+            setTimeout(() => {
+                button.classList.remove('popping');
+            }, 500);
+
+            // Register the defect
             if (!state.currentInspection.defects[type]) {
                 state.currentInspection.defects[type] = 0;
             }
@@ -1684,6 +1742,15 @@
 
             // Update UI
             updateDefectCounters();
+
+            // Reset
+            pressedButton = null;
+            pressTimer = null;
+        }
+
+        // Legacy function for compatibility
+        function registerDefect(type, event) {
+            completeDefectRegistration(type, event.currentTarget);
         }
 
         function updateDefectCounters() {
