@@ -230,24 +230,45 @@
             font-weight: 600;
             color: #1a202c;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 4px 16px rgba(0,0,0,0.06);
             display: flex;
             align-items: center;
             justify-content: center;
             letter-spacing: -0.3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .big-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(42, 82, 152, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .big-btn:hover::before {
+            width: 300%;
+            height: 300%;
         }
 
         .big-btn:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 32px rgba(42, 82, 152, 0.15);
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 16px 40px rgba(42, 82, 152, 0.2);
             background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
             color: white;
             border-color: transparent;
         }
 
         .big-btn:active {
-            transform: translateY(-2px);
+            transform: translateY(-2px) scale(0.98);
+            transition: all 0.1s;
         }
 
         /* Pause Screen */
@@ -289,6 +310,7 @@
             align-items: center;
             justify-content: center;
             z-index: 2000;
+            animation: fadeIn 0.3s ease-out;
         }
 
         .modal-content {
@@ -299,6 +321,7 @@
             width: 90%;
             box-shadow: 0 24px 60px rgba(0,0,0,0.2);
             border: 1px solid rgba(255,255,255,0.5);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .modal-content h2 {
@@ -474,20 +497,63 @@
         .scan-animation {
             width: 300px;
             height: 300px;
-            border: 4px solid #3498db;
+            border: 4px solid #2a5298;
             border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 48px;
+            font-size: 64px;
             margin-bottom: 30px;
-            animation: pulse 2s infinite;
+            animation: scanPulse 2s infinite, float 3s ease-in-out infinite;
             background: white;
+            position: relative;
+            overflow: hidden;
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(52,152,219,0.5); }
-            50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(52,152,219,0.8); }
+        .scan-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent,
+                rgba(42, 82, 152, 0.1),
+                transparent
+            );
+            animation: scanLine 2s linear infinite;
+        }
+
+        .scan-animation::after {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(42, 82, 152, 0.05), transparent);
+        }
+
+        @keyframes scanPulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 20px rgba(42, 82, 152, 0.3), 0 0 60px rgba(42, 82, 152, 0.1);
+                border-color: #2a5298;
+            }
+            50% {
+                transform: scale(1.03);
+                box-shadow: 0 0 40px rgba(42, 82, 152, 0.5), 0 0 80px rgba(42, 82, 152, 0.2);
+                border-color: #1e3c72;
+            }
+        }
+
+        @keyframes scanLine {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
         }
 
         /* Inspection Interface */
@@ -546,21 +612,44 @@
             border-radius: 14px;
             padding: 32px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
             min-height: 200px;
+            overflow: hidden;
+        }
+
+        .defect-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 0;
+        }
+
+        .defect-btn:hover::before {
+            opacity: 1;
+        }
+
+        .defect-btn > * {
+            position: relative;
+            z-index: 1;
         }
 
         .defect-btn:hover {
-            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
             border-color: transparent;
             color: white;
-            transform: translateY(-4px);
-            box-shadow: 0 12px 32px rgba(42, 82, 152, 0.25);
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 16px 40px rgba(42, 82, 152, 0.3);
+        }
+
+        .defect-btn:active {
+            transform: translateY(-2px) scale(0.98);
         }
 
         .defect-btn h3 {
@@ -673,6 +762,173 @@
         @keyframes blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
+        }
+
+        /* Modern Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes countPulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.3);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes successPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 20px rgba(16, 185, 129, 0);
+            }
+        }
+
+        /* Animated Classes */
+        .animate-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .animate-scale {
+            animation: fadeInScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .animate-slide-right {
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        .animate-slide-left {
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .animate-slide-up {
+            animation: slideInUp 0.5s ease-out;
+        }
+
+        .animate-pop {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .stagger-1 {
+            animation-delay: 0.1s;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        .stagger-2 {
+            animation-delay: 0.2s;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        .stagger-3 {
+            animation-delay: 0.3s;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        .stagger-4 {
+            animation-delay: 0.4s;
+            opacity: 0;
+            animation-fill-mode: forwards;
         }
 
         .hidden {
@@ -893,8 +1149,8 @@
             const content = document.getElementById('contentArea');
             content.innerHTML = `
                 <div class="content-grid grid-2">
-                    <button class="big-btn" onclick="showSerieMenu()">${t('serie')}</button>
-                    <button class="big-btn" onclick="showFeatureNotAvailable()">${t('sonderfall')}</button>
+                    <button class="big-btn animate-scale stagger-1" onclick="showSerieMenu()">${t('serie')}</button>
+                    <button class="big-btn animate-scale stagger-2" onclick="showFeatureNotAvailable()">${t('sonderfall')}</button>
                 </div>
             `;
         }
@@ -906,10 +1162,10 @@
             const content = document.getElementById('contentArea');
             content.innerHTML = `
                 <div class="content-grid grid-4">
-                    <button class="big-btn" onclick="showFeatureInProgress()">${t('sicht')}</button>
-                    <button class="big-btn" onclick="showFeatureInProgress()">${t('sonstiges')}</button>
-                    <button class="big-btn" onclick="startInspection('lehre')">${t('lehre')}</button>
-                    <button class="big-btn" onclick="startInspection('mass')">${t('mass')}</button>
+                    <button class="big-btn animate-scale stagger-1" onclick="showFeatureInProgress()">${t('sicht')}</button>
+                    <button class="big-btn animate-scale stagger-2" onclick="showFeatureInProgress()">${t('sonstiges')}</button>
+                    <button class="big-btn animate-scale stagger-3" onclick="startInspection('lehre')">${t('lehre')}</button>
+                    <button class="big-btn animate-scale stagger-4" onclick="startInspection('mass')">${t('mass')}</button>
                 </div>
             `;
         }
@@ -925,8 +1181,8 @@
             const content = document.getElementById('contentArea');
             content.innerHTML = `
                 <div class="scan-container">
-                    <div class="scan-animation">📷</div>
-                    <button class="btn-primary" onclick="completeScan()" style="width: 300px;">${t('scanComplete')}</button>
+                    <div class="scan-animation animate-scale">📷</div>
+                    <button class="btn-primary animate-slide-up stagger-2" onclick="completeScan()" style="width: 300px;">${t('scanComplete')}</button>
                 </div>
             `;
         }
@@ -942,17 +1198,17 @@
             addToHistory(showScanSimulation);
             const content = document.getElementById('contentArea');
             content.innerHTML = `
-                <div class="data-confirmation">
-                    <h2>Teilebegleitkarte gescannt</h2>
-                    <div class="data-row">
+                <div class="data-confirmation animate-scale">
+                    <h2 class="animate-slide-up">Teilebegleitkarte gescannt</h2>
+                    <div class="data-row animate-slide-right stagger-1">
                         <span class="data-label">Artikelnummer:</span>
                         <span class="data-value">${state.currentInspection.articleNumber}</span>
                     </div>
-                    <div class="data-row">
+                    <div class="data-row animate-slide-right stagger-2">
                         <span class="data-label">TZ:</span>
                         <span class="data-value">${state.currentInspection.tz}</span>
                     </div>
-                    <button class="btn-primary" onclick="showContainerInput()">${t('confirm')}</button>
+                    <button class="btn-primary animate-slide-up stagger-3" onclick="showContainerInput()">${t('confirm')}</button>
                 </div>
             `;
         }
@@ -962,17 +1218,17 @@
             addToHistory(showScanConfirmation);
             const content = document.getElementById('contentArea');
             content.innerHTML = `
-                <div class="input-container">
-                    <h2>${t('containerNumber')}</h2>
+                <div class="input-container animate-scale">
+                    <h2 class="animate-slide-up">${t('containerNumber')}</h2>
                     <div class="container-input-grid">
-                        <input type="text" class="container-digit" id="digit0" maxlength="1" pattern="[0-9]">
-                        <input type="text" class="container-digit" id="digit1" maxlength="1" pattern="[0-9]">
-                        <input type="text" class="container-digit" id="digit2" maxlength="1" pattern="[0-9]">
-                        <input type="text" class="container-digit" id="digit3" maxlength="1" pattern="[0-9]">
-                        <input type="text" class="container-digit" id="digit4" maxlength="1" pattern="[0-9]">
-                        <input type="text" class="container-digit" id="digit5" maxlength="1" pattern="[0-9]">
+                        <input type="text" class="container-digit animate-pop stagger-1" id="digit0" maxlength="1" pattern="[0-9]">
+                        <input type="text" class="container-digit animate-pop stagger-2" id="digit1" maxlength="1" pattern="[0-9]">
+                        <input type="text" class="container-digit animate-pop stagger-3" id="digit2" maxlength="1" pattern="[0-9]">
+                        <input type="text" class="container-digit animate-pop stagger-4" id="digit3" maxlength="1" pattern="[0-9]">
+                        <input type="text" class="container-digit animate-pop stagger-1" id="digit4" maxlength="1" pattern="[0-9]">
+                        <input type="text" class="container-digit animate-pop stagger-2" id="digit5" maxlength="1" pattern="[0-9]">
                     </div>
-                    <button class="btn-primary" onclick="submitContainer()">${t('confirm')}</button>
+                    <button class="btn-primary animate-slide-up stagger-4" onclick="submitContainer()">${t('confirm')}</button>
                 </div>
             `;
             
@@ -1015,8 +1271,8 @@
             const content = document.getElementById('contentArea');
             content.innerHTML = `
                 <div class="content-grid grid-2">
-                    <button class="big-btn" onclick="setQuantity(200)">${t('fullContainer')}</button>
-                    <button class="big-btn" onclick="showManualQuantity()">${t('manual')}</button>
+                    <button class="big-btn animate-scale stagger-1" onclick="setQuantity(200)">${t('fullContainer')}</button>
+                    <button class="big-btn animate-scale stagger-2" onclick="showManualQuantity()">${t('manual')}</button>
                 </div>
             `;
         }
@@ -1031,13 +1287,15 @@
         function showManualQuantity() {
             const content = document.getElementById('contentArea');
             content.innerHTML = `
-                <div class="input-container">
-                    <h2>${t('quantity')}</h2>
-                    <input type="number" id="quantityInput" min="1" max="999">
-                    <button class="btn-primary" onclick="submitManualQuantity()">${t('confirm')}</button>
+                <div class="input-container animate-scale">
+                    <h2 class="animate-slide-up">${t('quantity')}</h2>
+                    <input type="number" class="animate-slide-up stagger-2" id="quantityInput" min="1" max="999">
+                    <button class="btn-primary animate-slide-up stagger-3" onclick="submitManualQuantity()">${t('confirm')}</button>
                 </div>
             `;
-            document.getElementById('quantityInput').focus();
+            setTimeout(() => {
+                document.getElementById('quantityInput').focus();
+            }, 400);
         }
 
         function submitManualQuantity() {
@@ -1057,28 +1315,28 @@
             const type = state.currentInspection.inspectionType;
             const otherType = type === 'lehre' ? t('mass') : t('lehre');
             const otherStatus = Math.random() > 0.5 ? 'active' : 'finished';
-            
-            const defectTypes = type === 'lehre' ? 
+
+            const defectTypes = type === 'lehre' ?
                 ['Maßabweichung', 'Formfehler', 'Positionsfehler'] :
                 ['Oberflächenfehler', 'Kantenqualität', 'Beschädigung'];
-            
+
             const content = document.getElementById('contentArea');
             content.innerHTML = `
                 <div class="inspection-container">
                     <div class="info-row">
-                        <div class="info-card">
+                        <div class="info-card animate-slide-up stagger-1">
                             <h3>${t('articleNumber')}</h3>
                             <p>${state.currentInspection.articleNumber}</p>
                         </div>
-                        <div class="info-card">
+                        <div class="info-card animate-slide-up stagger-2">
                             <h3>${t('totalQuantity')}</h3>
                             <p>${state.currentInspection.quantity}</p>
                         </div>
-                        <div class="info-card">
+                        <div class="info-card animate-slide-up stagger-3">
                             <h3>${t('defectCount')}</h3>
                             <p id="totalDefects">0</p>
                         </div>
-                        <div class="info-card">
+                        <div class="info-card animate-slide-up stagger-4">
                             <h3>${t('inspector')} (${otherType})</h3>
                             <p class="inspector-status">
                                 <span class="status-indicator status-${otherStatus}"></span>
@@ -1086,20 +1344,20 @@
                             </p>
                         </div>
                     </div>
-                    
+
                     <div class="defect-grid">
                         ${defectTypes.map((defect, i) => `
-                            <button class="defect-btn" onclick="registerDefect('${defect}')">
+                            <button class="defect-btn animate-scale stagger-${(i % 4) + 1}" onclick="registerDefect('${defect}')">
                                 <span class="defect-counter" id="counter-${i}">0</span>
                                 <h3>${defect}</h3>
                             </button>
                         `).join('')}
                     </div>
-                    
+
                     <div class="action-row">
-                        <button class="action-btn btn-complete" onclick="completeInspection()">${t('inspectionComplete')}</button>
-                        <button class="action-btn btn-reset" onclick="resetInspection()">${t('resetInspection')}</button>
-                        <button class="action-btn btn-next" onclick="nextInspection()">${t('nextInspection')}</button>
+                        <button class="action-btn btn-complete animate-slide-up stagger-2" onclick="completeInspection()">${t('inspectionComplete')}</button>
+                        <button class="action-btn btn-reset animate-slide-up stagger-3" onclick="resetInspection()">${t('resetInspection')}</button>
+                        <button class="action-btn btn-next animate-slide-up stagger-4" onclick="nextInspection()">${t('nextInspection')}</button>
                     </div>
                 </div>
             `;
@@ -1117,18 +1375,35 @@
         }
 
         function updateDefectCounters() {
-            const defectTypes = state.currentInspection.inspectionType === 'lehre' ? 
+            const defectTypes = state.currentInspection.inspectionType === 'lehre' ?
                 ['Maßabweichung', 'Formfehler', 'Positionsfehler'] :
                 ['Oberflächenfehler', 'Kantenqualität', 'Beschädigung'];
-            
+
             defectTypes.forEach((type, i) => {
                 const counter = document.getElementById(`counter-${i}`);
                 if (counter) {
-                    counter.textContent = state.currentInspection.defects[type] || 0;
+                    const oldValue = parseInt(counter.textContent);
+                    const newValue = state.currentInspection.defects[type] || 0;
+
+                    if (newValue !== oldValue) {
+                        counter.style.animation = 'none';
+                        setTimeout(() => {
+                            counter.style.animation = 'countPulse 0.4s ease-out';
+                            counter.textContent = newValue;
+                        }, 10);
+                    }
                 }
             });
-            
-            document.getElementById('totalDefects').textContent = state.currentInspection.totalDefects;
+
+            const totalElement = document.getElementById('totalDefects');
+            const oldTotal = parseInt(totalElement.textContent);
+            if (state.currentInspection.totalDefects !== oldTotal) {
+                totalElement.style.animation = 'none';
+                setTimeout(() => {
+                    totalElement.style.animation = 'countPulse 0.4s ease-out';
+                    totalElement.textContent = state.currentInspection.totalDefects;
+                }, 10);
+            }
         }
 
         // Complete Inspection
