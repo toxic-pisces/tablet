@@ -278,7 +278,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 50%, #dc2626 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -286,6 +286,7 @@
             z-index: 1000;
             color: white;
             backdrop-filter: blur(10px);
+            overflow: hidden;
         }
 
         .pause-screen::before {
@@ -294,6 +295,28 @@
             inset: 0;
             background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="pausegrid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23pausegrid)"/></svg>');
             opacity: 0.5;
+        }
+
+        .pause-screen::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 80%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(239, 68, 68, 0.3) 0%, transparent 70%);
+            animation: pausePulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pausePulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.3;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.5;
+            }
         }
 
         .pause-content {
@@ -311,15 +334,24 @@
         .pause-icon {
             width: 120px;
             height: 120px;
-            background: linear-gradient(135deg, #f59e0b, #d97706);
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 60px;
             margin: 0 auto 30px;
-            box-shadow: 0 10px 40px rgba(245, 158, 11, 0.4);
-            animation: float 3s ease-in-out infinite;
+            box-shadow: 0 10px 40px rgba(239, 68, 68, 0.6), 0 0 80px rgba(239, 68, 68, 0.3);
+            animation: float 3s ease-in-out infinite, pauseIconPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pauseIconPulse {
+            0%, 100% {
+                box-shadow: 0 10px 40px rgba(239, 68, 68, 0.6), 0 0 80px rgba(239, 68, 68, 0.3);
+            }
+            50% {
+                box-shadow: 0 10px 60px rgba(239, 68, 68, 0.8), 0 0 120px rgba(239, 68, 68, 0.5);
+            }
         }
 
         .pause-screen h1 {
@@ -664,7 +696,9 @@
             justify-content: center;
             position: relative;
             min-height: 200px;
-            overflow: hidden;
+            overflow: visible;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .defect-btn::before {
@@ -675,6 +709,39 @@
             opacity: 0;
             transition: opacity 0.3s ease;
             z-index: 0;
+            border-radius: 14px;
+        }
+
+        .defect-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 70%);
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .defect-btn.touch-active::after {
+            animation: touchRipple 0.6s ease-out;
+        }
+
+        @keyframes touchRipple {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+            100% {
+                width: 400px;
+                height: 400px;
+                opacity: 0;
+            }
         }
 
         .defect-btn:hover::before {
@@ -694,7 +761,28 @@
         }
 
         .defect-btn:active {
-            transform: translateY(-2px) scale(0.98);
+            transform: scale(0.95);
+            transition: all 0.1s;
+        }
+
+        .defect-btn.touch-feedback {
+            animation: touchFeedback 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes touchFeedback {
+            0% {
+                transform: scale(1);
+            }
+            25% {
+                transform: scale(0.92);
+            }
+            50% {
+                transform: scale(1.08);
+                box-shadow: 0 20px 50px rgba(42, 82, 152, 0.4), 0 0 0 8px rgba(42, 82, 152, 0.2);
+            }
+            100% {
+                transform: scale(1);
+            }
         }
 
         .defect-btn h3 {
@@ -1493,7 +1581,7 @@
 
                     <div class="defect-grid">
                         ${defectTypes.map((defect, i) => `
-                            <button class="defect-btn animate-scale stagger-${(i % 4) + 1}" onclick="registerDefect('${defect}')">
+                            <button class="defect-btn animate-scale stagger-${(i % 4) + 1}" onclick="registerDefect('${defect}', event)">
                                 <span class="defect-counter" id="counter-${i}">0</span>
                                 <h3>${defect}</h3>
                             </button>
@@ -1569,13 +1657,31 @@
             }
         }
 
-        function registerDefect(type) {
+        function registerDefect(type, event) {
+            // Get the button element
+            const button = event ? event.currentTarget : null;
+
+            // Add touch feedback animations
+            if (button) {
+                // Add ripple effect
+                button.classList.add('touch-active');
+                setTimeout(() => {
+                    button.classList.remove('touch-active');
+                }, 600);
+
+                // Add bounce feedback
+                button.classList.add('touch-feedback');
+                setTimeout(() => {
+                    button.classList.remove('touch-feedback');
+                }, 400);
+            }
+
             if (!state.currentInspection.defects[type]) {
                 state.currentInspection.defects[type] = 0;
             }
             state.currentInspection.defects[type]++;
             state.currentInspection.totalDefects++;
-            
+
             // Update UI
             updateDefectCounters();
         }
