@@ -2058,13 +2058,6 @@
             }
             scanInProgress = true;
 
-            // Stop scanner immediately to prevent multiple triggers
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.stop().catch(err => {
-                    console.error("Error stopping scanner:", err);
-                });
-            }
-
             // Vibration feedback
             if ('vibrate' in navigator) {
                 navigator.vibrate(200);
@@ -2079,10 +2072,10 @@
                 `;
             }
 
-            // Process the scanned code - reduced delay from 1500ms to 800ms
+            // Process the scanned code immediately - show brief success message
             setTimeout(() => {
                 processBarcodeResult(decodedText);
-            }, 800);
+            }, 500);
         }
 
         function onScanError(errorMessage) {
@@ -2115,22 +2108,40 @@
         }
 
         function processBarcodeResult(barcode) {
-            // Save the scanned barcode as article number
-            state.currentInspection.articleNumber = barcode;
-            state.currentInspection.tz = Math.floor(Math.random() * 11);
-
-            // Close scanner and show confirmation
-            closeBarcodeScanner();
-            showScanConfirmation();
-        }
-
-        function closeBarcodeScanner() {
+            // Stop and clean up scanner first
             if (html5QrcodeScanner) {
                 html5QrcodeScanner.stop().then(() => {
                     html5QrcodeScanner.clear();
                     html5QrcodeScanner = null;
                 }).catch(err => {
                     console.error("Error stopping scanner:", err);
+                    html5QrcodeScanner = null;
+                });
+            }
+
+            // Remove modal
+            const modal = document.getElementById('scannerModal');
+            if (modal) {
+                modal.remove();
+            }
+
+            // Save the scanned barcode as article number
+            state.currentInspection.articleNumber = barcode;
+            state.currentInspection.tz = Math.floor(Math.random() * 11);
+
+            // Show confirmation page
+            showScanConfirmation();
+        }
+
+        function closeBarcodeScanner() {
+            // Manual close (X button or click outside)
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    html5QrcodeScanner.clear();
+                    html5QrcodeScanner = null;
+                }).catch(err => {
+                    console.error("Error stopping scanner:", err);
+                    html5QrcodeScanner = null;
                 });
             }
 
@@ -2138,6 +2149,8 @@
             if (modal) {
                 modal.remove();
             }
+
+            scanInProgress = false;
         }
 
         // Initialize on page load
