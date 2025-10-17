@@ -1,7 +1,8 @@
-const CACHE_NAME = 'qs-pruefung-v1';
+const CACHE_NAME = 'qs-pruefung-v2';
 const urlsToCache = [
   './test.html',
-  './manifest.json'
+  './manifest.json',
+  'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'
 ];
 
 // Install event - cache files
