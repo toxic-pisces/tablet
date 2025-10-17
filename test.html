@@ -1524,9 +1524,11 @@
                 quantity: 0,
                 inspectionType: '',
                 defects: {},
-                totalDefects: 0
+                totalDefects: 0,
+                inspectionDbId: null // Link to current inspection in database
             },
-            tbkDatabase: [] // Array of {batchNummer, tbkNummer, laufkarte, chargenr}
+            tbkDatabase: [], // Array of {batchNummer, tbkNummer, laufkarte, chargenr}
+            inspectionDatabase: [] // Array of {pruefungsNummer, batchNummer, inspektion, total, io, nio, pruefer, start, ende}
         };
 
         // Translations
@@ -1765,7 +1767,110 @@
             state.currentInspection.quantity = qty;
             state.currentInspection.defects = {};
             state.currentInspection.totalDefects = 0;
+
+            // Create inspection database entry
+            createInspectionDatabaseEntry();
+
             showInspectionInterface();
+        }
+
+        // Inspection Database Functions
+        function createInspectionDatabaseEntry() {
+            // Get BatchNummer from TBK database
+            const tbkEntry = state.tbkDatabase.find(entry =>
+                entry.tbkNummer === state.currentInspection.articleNumber
+            );
+
+            if (!tbkEntry) {
+                console.error("TBK not found in database");
+                return;
+            }
+
+            const batchNummer = tbkEntry.batchNummer;
+
+            // Calculate Prüfungsnummer (count inspections for this batch + 1)
+            const inspectionsForBatch = state.inspectionDatabase.filter(
+                entry => entry.batchNummer === batchNummer
+            );
+            const pruefungsNummer = inspectionsForBatch.length + 1;
+
+            // Determine inspection type: M (Maß) or L (Lehre)
+            const inspektion = state.currentInspection.inspectionType === 'Mass' ? 'M' : 'L';
+
+            // Create entry
+            const entry = {
+                pruefungsNummer: pruefungsNummer,
+                batchNummer: batchNummer,
+                inspektion: inspektion,
+                total: state.currentInspection.quantity,
+                io: null,
+                nio: null,
+                pruefer: state.personnelNumber,
+                start: new Date().toLocaleString('de-DE', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                }),
+                ende: null
+            };
+
+            state.inspectionDatabase.push(entry);
+            // Store reference to this entry
+            state.currentInspection.inspectionDbId = state.inspectionDatabase.length - 1;
+        }
+
+        function updateInspectionDatabaseEntry() {
+            if (state.currentInspection.inspectionDbId === null) return;
+
+            const entry = state.inspectionDatabase[state.currentInspection.inspectionDbId];
+            if (!entry) return;
+
+            // Calculate IO and NIO
+            const nio = state.currentInspection.totalDefects;
+            const io = state.currentInspection.quantity - nio;
+
+            entry.io = io;
+            entry.nio = nio;
+            entry.ende = new Date().toLocaleString('de-DE', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        function deleteCurrentInspectionDatabaseEntry() {
+            if (state.currentInspection.inspectionDbId === null) return;
+
+            // Remove entry from database
+            state.inspectionDatabase.splice(state.currentInspection.inspectionDbId, 1);
+            state.currentInspection.inspectionDbId = null;
+
+            // Recalculate all Prüfungsnummern for affected batches
+            recalculatePruefungsNummern();
+        }
+
+        function recalculatePruefungsNummern() {
+            // Group by batch and recalculate Prüfungsnummer
+            const batches = {};
+            state.inspectionDatabase.forEach((entry, index) => {
+                if (!batches[entry.batchNummer]) {
+                    batches[entry.batchNummer] = [];
+                }
+                batches[entry.batchNummer].push({ entry, index });
+            });
+
+            // Update Prüfungsnummer for each batch
+            Object.values(batches).forEach(batchEntries => {
+                batchEntries.forEach((item, i) => {
+                    item.entry.pruefungsNummer = i + 1;
+                });
+            });
         }
 
         function showManualQuantity() {
@@ -1827,22 +1932,18 @@
                 <div class="inspection-container">
                     <div class="info-row">
                         <div class="info-card animate-slide-up stagger-1">
-                            <h3>TBK Nummer</h3>
-                            <p>${state.currentInspection.articleNumber}</p>
-                        </div>
-                        <div class="info-card animate-slide-up stagger-2">
                             <h3>Artikel</h3>
                             <p>Housing</p>
                         </div>
-                        <div class="info-card animate-slide-up stagger-3">
+                        <div class="info-card animate-slide-up stagger-2">
                             <h3>${t('totalQuantity')}</h3>
                             <p>${state.currentInspection.quantity}</p>
                         </div>
-                        <div class="info-card animate-slide-up stagger-4">
+                        <div class="info-card animate-slide-up stagger-3">
                             <h3>${t('defectCount')}</h3>
                             <p id="totalDefects">0</p>
                         </div>
-                        <div class="info-card animate-slide-up stagger-5" style="cursor: pointer;" onclick="showInspectorModal()">
+                        <div class="info-card animate-slide-up stagger-4" style="cursor: pointer;" onclick="showInspectorModal()">
                             <h3>${t('inspector')} (${otherType})</h3>
                             <p class="inspector-status">
                                 <span class="status-indicator status-${inspectors[0].status}"></span>
@@ -1993,7 +2094,10 @@
         function completeInspection() {
             const good = state.currentInspection.quantity - state.currentInspection.totalDefects;
             const bad = state.currentInspection.totalDefects;
-            
+
+            // Update inspection database entry with IO, NIO, and end time
+            updateInspectionDatabaseEntry();
+
             showModal({
                 title: t('inspectionComplete'),
                 content: `
@@ -2015,6 +2119,8 @@
                 buttons: [
                     { text: 'Abbrechen', action: closeModal },
                     { text: 'Zurücksetzen', action: () => {
+                        // Delete current inspection from database
+                        deleteCurrentInspectionDatabaseEntry();
                         closeModal();
                         showMainMenu();
                     }}
@@ -2300,10 +2406,10 @@
                 if (e.target === modal) closeDatabase();
             };
 
-            let tableContent = '';
-
+            // TBK Database Table
+            let tbkTableContent = '';
             if (state.tbkDatabase.length === 0) {
-                tableContent = `
+                tbkTableContent = `
                     <div class="database-empty">
                         <div class="database-empty-icon">🗄️</div>
                         <div class="database-empty-text">Keine TBK-Daten vorhanden</div>
@@ -2320,7 +2426,8 @@
                     </tr>
                 `).join('');
 
-                tableContent = `
+                tbkTableContent = `
+                    <h3 style="margin-bottom: 20px; color: #1a202c; font-size: 20px;">TBK Datenbank</h3>
                     <table class="database-table">
                         <thead>
                             <tr>
@@ -2337,14 +2444,63 @@
                 `;
             }
 
+            // Inspection Database Table
+            let inspectionTableContent = '';
+            if (state.inspectionDatabase.length === 0) {
+                inspectionTableContent = `
+                    <div class="database-empty" style="margin-top: 40px;">
+                        <div class="database-empty-icon">📋</div>
+                        <div class="database-empty-text">Keine Prüfungen vorhanden</div>
+                        <div class="database-empty-subtext">Führe eine Prüfung durch, um Einträge zu erstellen</div>
+                    </div>
+                `;
+            } else {
+                const rows = state.inspectionDatabase.map(entry => `
+                    <tr>
+                        <td>${entry.pruefungsNummer}</td>
+                        <td>${entry.batchNummer}</td>
+                        <td>${entry.inspektion}</td>
+                        <td>${entry.total}</td>
+                        <td>${entry.io !== null ? entry.io : '-'}</td>
+                        <td>${entry.nio !== null ? entry.nio : '-'}</td>
+                        <td>${entry.pruefer}</td>
+                        <td>${entry.start}</td>
+                        <td>${entry.ende || '-'}</td>
+                    </tr>
+                `).join('');
+
+                inspectionTableContent = `
+                    <h3 style="margin: 40px 0 20px 0; color: #1a202c; font-size: 20px;">Prüfungsdatenbank</h3>
+                    <table class="database-table">
+                        <thead>
+                            <tr>
+                                <th>Prüfungs-Nr</th>
+                                <th>Batch-Nr</th>
+                                <th>Inspektion</th>
+                                <th>Total</th>
+                                <th>IO</th>
+                                <th>NIO</th>
+                                <th>Prüfer</th>
+                                <th>Start</th>
+                                <th>Ende</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
+                `;
+            }
+
             modal.innerHTML = `
                 <div class="database-modal">
                     <div class="database-header">
-                        <h2>🗄️ TBK Datenbank</h2>
+                        <h2>🗄️ Datenbanken</h2>
                         <button class="database-close-btn" onclick="closeDatabase()">×</button>
                     </div>
                     <div class="database-body">
-                        ${tableContent}
+                        ${tbkTableContent}
+                        ${inspectionTableContent}
                     </div>
                 </div>
             `;
