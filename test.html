@@ -1412,6 +1412,124 @@
             color: #94a3b8;
         }
 
+        /* Standards Editor Modal */
+        .standards-section {
+            margin-bottom: 35px;
+        }
+
+        .standards-section h3 {
+            color: #1a202c;
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .standards-input {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            margin-bottom: 15px;
+        }
+
+        .standards-input:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+
+        .defect-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .defect-tag {
+            background: #2a5298;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .defect-tag-remove {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .defect-tag-remove:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .add-defect-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .add-defect-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .inspection-sequence-options {
+            display: flex;
+            gap: 15px;
+        }
+
+        .sequence-option {
+            flex: 1;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .sequence-option:hover {
+            border-color: #2a5298;
+        }
+
+        .sequence-option.selected {
+            background: #2a5298;
+            color: white;
+            border-color: #2a5298;
+        }
+
+        .sequence-option h4 {
+            font-size: 15px;
+            margin-bottom: 5px;
+        }
+
+        .sequence-option p {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
         /* Animated Classes */
         .animate-in {
             animation: fadeIn 0.5s ease-out;
@@ -1489,6 +1607,7 @@
             <button class="sidebar-btn" onclick="toggleLanguage()" title="Sprache" id="languageBtn">🇩🇪</button>
             <button class="sidebar-btn" onclick="togglePause()" title="Pause">⏸️</button>
             <button class="sidebar-btn" onclick="openDatabase()" title="Datenbank">🗄️</button>
+            <button class="sidebar-btn" onclick="openStandards()" title="Standards">⚙️</button>
 
             <button class="undo-btn" onclick="goBack()" title="Zurück">↶</button>
         </div>
@@ -1528,7 +1647,15 @@
                 inspectionDbId: null // Link to current inspection in database
             },
             tbkDatabase: [], // Array of {batchNummer, tbkNummer, laufkarte, chargenr}
-            inspectionDatabase: [] // Array of {pruefungsNummer, batchNummer, inspektion, total, io, nio, pruefer, start, ende}
+            inspectionDatabase: [], // Array of {pruefungsNummer, batchNummer, inspektion, total, io, nio, pruefer, start, ende}
+            partTypeStandards: {
+                Housing: {
+                    containerCapacity: 200,
+                    defectTypes: ['Kratzer', 'Delle', 'Verschmutzung', 'Riss', 'Fehlbohrung', 'Grat'],
+                    inspectionTypes: ['mass', 'lehre'], // Available inspection types
+                    inspectionSequence: 'both' // 'sequential' (mass then lehre) or 'both' (either one)
+                }
+            }
         };
 
         // Translations
@@ -1755,9 +1882,13 @@
         function showQuantitySelection() {
             addToHistory(showScanConfirmation);
             const content = document.getElementById('contentArea');
+
+            // Get container capacity from standards
+            const containerCapacity = state.partTypeStandards.Housing.containerCapacity;
+
             content.innerHTML = `
                 <div class="content-grid grid-2">
-                    <button class="big-btn animate-scale stagger-1" onclick="setQuantity(200)">${t('fullContainer')}</button>
+                    <button class="big-btn animate-scale stagger-1" onclick="setQuantity(${containerCapacity})">${t('fullContainer')} (${containerCapacity} Stk.)</button>
                     <button class="big-btn animate-scale stagger-2" onclick="showManualQuantity()">${t('manual')}</button>
                 </div>
             `;
@@ -1795,7 +1926,7 @@
             const pruefungsNummer = inspectionsForBatch.length + 1;
 
             // Determine inspection type: M (Maß) or L (Lehre)
-            const inspektion = state.currentInspection.inspectionType === 'Mass' ? 'M' : 'L';
+            const inspektion = state.currentInspection.inspectionType === 'mass' ? 'M' : 'L';
 
             // Create entry
             const entry = {
@@ -1923,9 +2054,8 @@
             // Store inspectors in state for modal
             state.currentInspection.otherInspectors = inspectors;
 
-            const defectTypes = type === 'lehre' ?
-                ['Maßabweichung', 'Formfehler', 'Positionsfehler'] :
-                ['Oberflächenfehler', 'Kantenqualität', 'Beschädigung'];
+            // Get defect types from standards
+            const defectTypes = state.partTypeStandards.Housing.defectTypes;
 
             const content = document.getElementById('contentArea');
             content.innerHTML = `
@@ -2059,9 +2189,8 @@
         }
 
         function updateDefectCounters() {
-            const defectTypes = state.currentInspection.inspectionType === 'lehre' ?
-                ['Maßabweichung', 'Formfehler', 'Positionsfehler'] :
-                ['Oberflächenfehler', 'Kantenqualität', 'Beschädigung'];
+            // Get defect types from standards
+            const defectTypes = state.partTypeStandards.Housing.defectTypes;
 
             defectTypes.forEach((type, i) => {
                 const counter = document.getElementById(`counter-${i}`);
@@ -2533,6 +2662,142 @@
             }
 
             scanInProgress = false;
+        }
+
+        // Standards Editor
+        function openStandards() {
+            const standards = state.partTypeStandards.Housing;
+
+            const defectTagsHtml = standards.defectTypes.map((defect, index) => `
+                <div class="defect-tag">
+                    ${defect}
+                    <button class="defect-tag-remove" onclick="removeDefectType(${index})">×</button>
+                </div>
+            `).join('');
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'standardsModal';
+            modal.onclick = (e) => {
+                if (e.target === modal) closeStandards();
+            };
+
+            modal.innerHTML = `
+                <div class="database-modal">
+                    <div class="database-header">
+                        <h2>⚙️ Standards - Housing</h2>
+                        <button class="database-close-btn" onclick="closeStandards()">×</button>
+                    </div>
+                    <div class="database-body">
+                        <div class="standards-section">
+                            <h3>Behälterkapazität</h3>
+                            <input
+                                type="number"
+                                class="standards-input"
+                                id="containerCapacity"
+                                value="${standards.containerCapacity}"
+                                placeholder="Anzahl Teile pro Behälter"
+                            />
+                        </div>
+
+                        <div class="standards-section">
+                            <h3>Fehlermerkmale</h3>
+                            <div class="defect-tags" id="defectTags">
+                                ${defectTagsHtml}
+                            </div>
+                            <input
+                                type="text"
+                                class="standards-input"
+                                id="newDefectInput"
+                                placeholder="Neues Fehlermerkmal eingeben"
+                                onkeypress="if(event.key === 'Enter') addDefectType()"
+                            />
+                            <button class="add-defect-btn" onclick="addDefectType()">+ Fehlermerkmal hinzufügen</button>
+                        </div>
+
+                        <div class="standards-section">
+                            <h3>Inspektionsreihenfolge</h3>
+                            <div class="inspection-sequence-options">
+                                <div class="sequence-option ${standards.inspectionSequence === 'sequential' ? 'selected' : ''}"
+                                     onclick="setInspectionSequence('sequential')">
+                                    <h4>Sequenziell</h4>
+                                    <p>Erst Maß, dann Lehre</p>
+                                </div>
+                                <div class="sequence-option ${standards.inspectionSequence === 'both' ? 'selected' : ''}"
+                                     onclick="setInspectionSequence('both')">
+                                    <h4>Frei wählbar</h4>
+                                    <p>Maß oder Lehre möglich</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary" style="width: 100%; margin-top: 30px;" onclick="saveStandards()">
+                            Speichern
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        }
+
+        function addDefectType() {
+            const input = document.getElementById('newDefectInput');
+            const defectName = input.value.trim();
+
+            if (defectName && !state.partTypeStandards.Housing.defectTypes.includes(defectName)) {
+                state.partTypeStandards.Housing.defectTypes.push(defectName);
+                input.value = '';
+
+                // Update display
+                updateDefectTags();
+            }
+        }
+
+        function removeDefectType(index) {
+            state.partTypeStandards.Housing.defectTypes.splice(index, 1);
+            updateDefectTags();
+        }
+
+        function updateDefectTags() {
+            const container = document.getElementById('defectTags');
+            const defectTagsHtml = state.partTypeStandards.Housing.defectTypes.map((defect, index) => `
+                <div class="defect-tag">
+                    ${defect}
+                    <button class="defect-tag-remove" onclick="removeDefectType(${index})">×</button>
+                </div>
+            `).join('');
+            container.innerHTML = defectTagsHtml;
+        }
+
+        function setInspectionSequence(sequence) {
+            state.partTypeStandards.Housing.inspectionSequence = sequence;
+
+            // Update UI
+            document.querySelectorAll('.sequence-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            event.target.closest('.sequence-option').classList.add('selected');
+        }
+
+        function saveStandards() {
+            const capacity = document.getElementById('containerCapacity').value;
+            state.partTypeStandards.Housing.containerCapacity = parseInt(capacity);
+
+            showModal({
+                title: 'Gespeichert',
+                content: '<p>Standards wurden erfolgreich gespeichert!</p>',
+                buttons: [
+                    { text: 'OK', action: () => { closeModal(); closeStandards(); } }
+                ]
+            });
+        }
+
+        function closeStandards() {
+            const modal = document.getElementById('standardsModal');
+            if (modal) {
+                modal.remove();
+            }
         }
 
         // Initialize on page load
