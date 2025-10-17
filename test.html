@@ -1521,11 +1521,26 @@
         }
 
         .available-inspections {
+            margin-bottom: 30px;
+        }
+
+        .available-drop-zone {
             display: flex;
             gap: 12px;
             justify-content: center;
-            margin-bottom: 30px;
             flex-wrap: wrap;
+            min-height: 80px;
+            padding: 15px;
+            border: 2px dashed #e2e8f0;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .available-drop-zone.drag-over {
+            border-color: #ef4444;
+            background: #fef2f2;
+            border-style: solid;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
         }
 
         .inspection-card {
@@ -2070,22 +2085,20 @@
 
         // Scan Confirmation
         function showScanConfirmation() {
-            // Validate inspection sequence if sequential mode is enabled
-            if (state.partTypeStandards.Housing.inspectionSequence === 'sequential') {
-                const validationError = validateInspectionSequence(
-                    state.currentInspection.articleNumber,
-                    state.currentInspection.inspectionType
-                );
-                if (validationError) {
-                    showModal({
-                        title: 'Reihenfolge nicht eingehalten',
-                        content: `<p>${validationError}</p>`,
-                        buttons: [
-                            { text: 'Zurück zum Menü', action: () => { closeModal(); showSerieMenu(); } }
-                        ]
-                    });
-                    return;
-                }
+            // Validate inspection sequence
+            const validationError = validateInspectionSequence(
+                state.currentInspection.articleNumber,
+                state.currentInspection.inspectionType
+            );
+            if (validationError) {
+                showModal({
+                    title: 'Reihenfolge nicht eingehalten',
+                    content: `<p>${validationError}</p>`,
+                    buttons: [
+                        { text: 'Zurück zum Menü', action: () => { closeModal(); showSerieMenu(); } }
+                    ]
+                });
+                return;
             }
 
             addToHistory(showScanSimulation);
@@ -3004,11 +3017,19 @@
 
             // Render available inspections (not yet in timeline)
             availableContainer.innerHTML = '<div class="sequence-builder-subtitle">Verfügbare Prüfungen:</div>';
-            allInspections.forEach(type => {
-                if (!usedInspections.has(type)) {
-                    availableContainer.innerHTML += createInspectionCard(type, inspectionLabels[type]);
-                }
-            });
+            availableContainer.innerHTML += `<div class="available-drop-zone" ondrop="handleDropToAvailable(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">`;
+
+            if (usedInspections.size === 3) {
+                availableContainer.innerHTML += '<div style="text-align: center; color: #94a3b8; padding: 20px; font-style: italic;">Ziehe Prüfungen hierher, um sie zu deaktivieren</div>';
+            } else {
+                allInspections.forEach(type => {
+                    if (!usedInspections.has(type)) {
+                        availableContainer.innerHTML += createInspectionCard(type, inspectionLabels[type]);
+                    }
+                });
+            }
+
+            availableContainer.innerHTML += '</div>';
 
             // Render timeline with current sequence
             timelineContainer.innerHTML = '<div class="sequence-builder-subtitle">Timeline (nacheinander):</div>';
@@ -3033,7 +3054,6 @@
                 <div class="inspection-card ${type}" draggable="true" data-type="${type}" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)">
                     <div class="inspection-card-icon">${type === 'lehre' ? '📏' : type === 'mass' ? '📐' : '👁️'}</div>
                     <div class="inspection-card-label">${label}</div>
-                    <button class="inspection-card-remove" onclick="removeFromTimeline(event, '${type}')">×</button>
                 </div>
             `;
         }
@@ -3141,17 +3161,26 @@
             }
         }
 
-        function removeFromTimeline(event, inspectionType) {
-            event.stopPropagation();
+        function handleDropToAvailable(event) {
+            if (event.stopPropagation) {
+                event.stopPropagation();
+            }
 
-            const card = event.target.closest('.inspection-card');
-            const step = card.parentElement;
+            if (!draggedElement || !draggedType) return false;
 
-            if (step.classList.contains('timeline-step')) {
-                const stepIndex = parseInt(step.dataset.step);
-                removeFromTimelineStep(inspectionType, stepIndex);
+            // Check if card is from timeline
+            const isFromTimeline = draggedElement.parentElement.classList.contains('timeline-step');
+
+            if (isFromTimeline) {
+                // Remove from timeline (disable inspection)
+                const stepIndex = parseInt(draggedElement.parentElement.dataset.step);
+                removeFromTimelineStep(draggedType, stepIndex);
+
+                // Refresh the builder UI
                 initializeSequenceBuilder();
             }
+
+            return false;
         }
 
         function addDefectType(inspectionType) {
