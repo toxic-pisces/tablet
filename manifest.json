@@ -2,7 +2,7 @@
   "name": "Qualitätsprüfung - Tablet Interface",
   "short_name": "QS Prüfung",
   "description": "Tablet-Interface für Qualitätsprüfung",
-  "start_url": "./test.html",
+  "start_url": "./test2.html",
   "display": "standalone",
   "background_color": "#f5f7fa",
   "theme_color": "#2a5298",
