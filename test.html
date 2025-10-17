@@ -25,6 +25,10 @@
             box-sizing: border-box;
         }
 
+        input, textarea, select, button {
+            touch-action: manipulation;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             background: #f5f7fa;
@@ -81,6 +85,7 @@
             margin-bottom: 24px;
             transition: all 0.2s;
             background: #f8fafc;
+            touch-action: manipulation;
         }
 
         .login-box input:focus {
