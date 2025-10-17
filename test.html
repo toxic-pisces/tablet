@@ -1534,6 +1534,8 @@
             border: 2px dashed #e2e8f0;
             border-radius: 10px;
             transition: all 0.2s ease;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .available-drop-zone.drag-over {
@@ -1550,11 +1552,16 @@
             border-radius: 10px;
             cursor: grab;
             user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-touch-callout: none;
             font-weight: 700;
             font-size: 15px;
             box-shadow: 0 4px 12px rgba(42, 82, 152, 0.3);
             transition: all 0.2s ease;
             border: 2px solid transparent;
+            touch-action: none;
         }
 
         .inspection-card:hover {
@@ -1596,6 +1603,8 @@
             padding: 15px;
             min-height: 120px;
             transition: all 0.2s ease;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .timeline-step.drag-over {
@@ -3051,7 +3060,9 @@
 
         function createInspectionCard(type, label) {
             return `
-                <div class="inspection-card ${type}" draggable="true" data-type="${type}" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)">
+                <div class="inspection-card ${type}" draggable="true" data-type="${type}"
+                     ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)"
+                     ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event)">
                     <div class="inspection-card-icon">${type === 'lehre' ? '📏' : type === 'mass' ? '📐' : '👁️'}</div>
                     <div class="inspection-card-label">${label}</div>
                 </div>
@@ -3181,6 +3192,133 @@
             }
 
             return false;
+        }
+
+        // Touch event handling for mobile/tablet
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchElement = null;
+        let clonedElement = null;
+
+        function handleTouchStart(event) {
+            const touch = event.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+
+            touchElement = event.currentTarget;
+            draggedElement = touchElement;
+            draggedType = touchElement.dataset.type;
+
+            // Prevent default to avoid text selection
+            event.preventDefault();
+
+            // Create a clone for visual feedback
+            clonedElement = touchElement.cloneNode(true);
+            clonedElement.style.position = 'fixed';
+            clonedElement.style.pointerEvents = 'none';
+            clonedElement.style.zIndex = '10000';
+            clonedElement.style.opacity = '0.8';
+            clonedElement.style.transform = 'scale(1.05)';
+            clonedElement.style.left = touch.clientX - (touchElement.offsetWidth / 2) + 'px';
+            clonedElement.style.top = touch.clientY - (touchElement.offsetHeight / 2) + 'px';
+            document.body.appendChild(clonedElement);
+
+            // Make original semi-transparent
+            touchElement.style.opacity = '0.3';
+        }
+
+        function handleTouchMove(event) {
+            if (!touchElement || !clonedElement) return;
+
+            event.preventDefault();
+
+            const touch = event.touches[0];
+
+            // Move the clone
+            clonedElement.style.left = touch.clientX - (touchElement.offsetWidth / 2) + 'px';
+            clonedElement.style.top = touch.clientY - (touchElement.offsetHeight / 2) + 'px';
+
+            // Check what element is underneath
+            clonedElement.style.display = 'none';
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            clonedElement.style.display = 'block';
+
+            // Remove all drag-over classes
+            document.querySelectorAll('.timeline-step, .available-drop-zone').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+
+            // Add drag-over class to the element below
+            if (elementBelow) {
+                const dropZone = elementBelow.closest('.timeline-step, .available-drop-zone');
+                if (dropZone) {
+                    dropZone.classList.add('drag-over');
+                }
+            }
+        }
+
+        function handleTouchEnd(event) {
+            if (!touchElement || !clonedElement) return;
+
+            event.preventDefault();
+
+            const touch = event.changedTouches[0];
+
+            // Find element at touch position
+            clonedElement.style.display = 'none';
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+
+            // Restore original opacity
+            touchElement.style.opacity = '1';
+
+            // Remove clone
+            if (clonedElement && clonedElement.parentNode) {
+                clonedElement.parentNode.removeChild(clonedElement);
+            }
+            clonedElement = null;
+
+            // Remove all drag-over classes
+            document.querySelectorAll('.timeline-step, .available-drop-zone').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+
+            // Handle drop
+            if (elementBelow) {
+                const timelineStep = elementBelow.closest('.timeline-step');
+                const availableZone = elementBelow.closest('.available-drop-zone');
+
+                if (timelineStep) {
+                    // Dropped on timeline
+                    const stepIndex = parseInt(timelineStep.dataset.step);
+                    const isFromAvailable = touchElement.parentElement.classList.contains('available-drop-zone');
+                    const isFromTimeline = touchElement.parentElement.classList.contains('timeline-step');
+
+                    if (isFromAvailable) {
+                        addToTimelineStep(draggedType, stepIndex);
+                    } else if (isFromTimeline) {
+                        const oldStepIndex = parseInt(touchElement.parentElement.dataset.step);
+                        if (oldStepIndex !== stepIndex) {
+                            removeFromTimelineStep(draggedType, oldStepIndex);
+                            addToTimelineStep(draggedType, stepIndex);
+                        }
+                    }
+
+                    initializeSequenceBuilder();
+                } else if (availableZone) {
+                    // Dropped on available zone
+                    const isFromTimeline = touchElement.parentElement.classList.contains('timeline-step');
+
+                    if (isFromTimeline) {
+                        const stepIndex = parseInt(touchElement.parentElement.dataset.step);
+                        removeFromTimelineStep(draggedType, stepIndex);
+                        initializeSequenceBuilder();
+                    }
+                }
+            }
+
+            touchElement = null;
+            draggedElement = null;
+            draggedType = null;
         }
 
         function addDefectType(inspectionType) {
