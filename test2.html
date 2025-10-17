@@ -1806,11 +1806,17 @@
             right: 0;
             background: white;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-            z-index: 9999;
+            z-index: 10001;
             transform: translateY(100%);
             transition: transform 0.3s ease;
             max-height: 50vh;
             overflow: hidden;
+        }
+        
+        /* Shift login box up when keyboard is visible */
+        .login-container.keyboard-active .login-box {
+            transform: translateY(-25vh);
+            transition: transform 0.3s ease;
         }
 
         .keyboard-container.show {
@@ -1892,7 +1898,7 @@
 <body>
     <!-- Login Screen -->
     <div id="loginScreen" class="login-container">
-        <div class="version-badge">v0.2</div>
+        <div class="version-badge">v0.3</div>
         <div class="login-box">
             <h1 id="loginTitle">Qualitätsprüfung</h1>
             <input type="text" 
@@ -2046,16 +2052,31 @@
 
             keyboard.setInput(input.value);
             document.getElementById('keyboardContainer').classList.add('show');
+            
+            // Shift login screen up if keyboard is shown on login
+            const loginScreen = document.getElementById('loginScreen');
+            if (loginScreen && !loginScreen.classList.contains('hidden')) {
+                loginScreen.classList.add('keyboard-active');
+            }
 
-            // Prevent native keyboard on iOS
+            // Prevent native keyboard on iOS/PWA
             input.setAttribute('readonly', 'readonly');
+            input.blur();
             setTimeout(() => {
                 input.removeAttribute('readonly');
+                input.focus();
             }, 100);
         }
 
         function hideKeyboard() {
             document.getElementById('keyboardContainer').classList.remove('show');
+            
+            // Remove keyboard-active class from login screen
+            const loginScreen = document.getElementById('loginScreen');
+            if (loginScreen) {
+                loginScreen.classList.remove('keyboard-active');
+            }
+            
             currentInput = null;
         }
 
@@ -3320,11 +3341,14 @@
 
             availableContainer.innerHTML += `<div class="available-drop-zone" ondrop="handleDropToAvailable(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">${dropZoneContent}</div>`;
 
-            // Render timeline with current sequence - only show steps that exist + one empty
+            // Render timeline with current sequence - only show steps that exist + one empty (max 3 total)
             timelineContainer.innerHTML = '<div class="sequence-builder-subtitle">Timeline (nacheinander):</div>';
             
-            // Determine how many steps to show
-            const numSteps = currentSequence.length > 0 ? currentSequence.length + 1 : 1;
+            // Determine how many steps to show (max 3)
+            const maxSteps = 3;
+            const numSteps = currentSequence.length > 0 
+                ? Math.min(currentSequence.length + 1, maxSteps) 
+                : 1;
             
             for (let i = 0; i < numSteps; i++) {
                 const stepInspections = currentSequence[i] || [];
@@ -3704,7 +3728,21 @@
             document.addEventListener('focusin', (e) => {
                 if (e.target.hasAttribute('data-keyboard')) {
                     e.preventDefault();
-                    showKeyboard(e.target);
+                    e.target.blur();
+                    setTimeout(() => {
+                        showKeyboard(e.target);
+                    }, 50);
+                }
+            });
+            
+            // Additional click handler for PWA/iOS
+            document.addEventListener('click', (e) => {
+                if (e.target.hasAttribute('data-keyboard') && !e.target.hasAttribute('readonly')) {
+                    e.preventDefault();
+                    e.target.blur();
+                    setTimeout(() => {
+                        showKeyboard(e.target);
+                    }, 50);
                 }
             });
 
