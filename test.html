@@ -1968,8 +1968,10 @@
 
         // Barcode Scanner
         let html5QrcodeScanner = null;
+        let scanInProgress = false;
 
         function openBarcodeScanner() {
+            scanInProgress = false;
             const modal = document.createElement('div');
             modal.className = 'modal';
             modal.id = 'scannerModal';
@@ -2007,8 +2009,8 @@
 
         function startBarcodeScanner() {
             const config = {
-                fps: 10,
-                qrbox: { width: 250, height: 250 },
+                fps: 20, // Increased from 10 for faster scanning
+                qrbox: { width: 400, height: 150 }, // Wider and flatter for barcodes
                 // Support all common barcode formats
                 formatsToSupport: [
                     Html5QrcodeSupportedFormats.QR_CODE,
@@ -2019,7 +2021,8 @@
                     Html5QrcodeSupportedFormats.UPC_A,
                     Html5QrcodeSupportedFormats.UPC_E
                 ],
-                rememberLastUsedCamera: true
+                rememberLastUsedCamera: true,
+                aspectRatio: 1.777778 // 16:9 aspect ratio for better barcode scanning
             };
 
             html5QrcodeScanner = new Html5Qrcode("reader");
@@ -2049,6 +2052,19 @@
         }
 
         function onScanSuccess(decodedText, decodedResult) {
+            // Prevent multiple scans
+            if (scanInProgress) {
+                return;
+            }
+            scanInProgress = true;
+
+            // Stop scanner immediately to prevent multiple triggers
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().catch(err => {
+                    console.error("Error stopping scanner:", err);
+                });
+            }
+
             // Vibration feedback
             if ('vibrate' in navigator) {
                 navigator.vibrate(200);
@@ -2063,10 +2079,10 @@
                 `;
             }
 
-            // Process the scanned code
+            // Process the scanned code - reduced delay from 1500ms to 800ms
             setTimeout(() => {
                 processBarcodeResult(decodedText);
-            }, 1500);
+            }, 800);
         }
 
         function onScanError(errorMessage) {
