@@ -1651,9 +1651,13 @@
             partTypeStandards: {
                 Housing: {
                     containerCapacity: 200,
-                    defectTypes: ['Kratzer', 'Delle', 'Verschmutzung', 'Riss', 'Fehlbohrung', 'Grat'],
-                    inspectionTypes: ['mass', 'lehre'], // Available inspection types
-                    inspectionSequence: 'both' // 'sequential' (mass then lehre) or 'both' (either one)
+                    defectTypes: {
+                        mass: ['Maßabweichung', 'Formfehler', 'Positionsfehler'],
+                        lehre: ['Kratzer', 'Delle', 'Verschmutzung', 'Riss', 'Fehlbohrung', 'Grat'],
+                        sicht: ['n.i.O.']
+                    },
+                    inspectionTypes: ['lehre', 'mass', 'sicht'], // Available inspection types
+                    inspectionSequence: 'sequential' // 'sequential' (lehre -> mass -> sicht) or 'both' (any order)
                 }
             }
         };
@@ -1826,7 +1830,7 @@
             const content = document.getElementById('contentArea');
             content.innerHTML = `
                 <div class="content-grid grid-4">
-                    <button class="big-btn animate-scale stagger-1" onclick="showFeatureInProgress()">${t('sicht')}</button>
+                    <button class="big-btn animate-scale stagger-1" onclick="startInspection('sicht')">${t('sicht')}</button>
                     <button class="big-btn animate-scale stagger-2" onclick="showFeatureInProgress()">${t('sonstiges')}</button>
                     <button class="big-btn animate-scale stagger-3" onclick="startInspection('lehre')">${t('lehre')}</button>
                     <button class="big-btn animate-scale stagger-4" onclick="startInspection('mass')">${t('mass')}</button>
@@ -1839,6 +1843,49 @@
             addToHistory(showSerieMenu);
             state.currentInspection.inspectionType = type;
             showScanSimulation();
+        }
+
+        function validateInspectionSequence(tbkNumber, requestedType) {
+            // Validation happens after scanning
+            const tbkEntry = state.tbkDatabase.find(entry => entry.tbkNummer === tbkNumber);
+            if (!tbkEntry) return null;
+
+            const batchNummer = tbkEntry.batchNummer;
+
+            // Get all inspections for this batch
+            const batchInspections = state.inspectionDatabase.filter(
+                entry => entry.batchNummer === batchNummer
+            );
+
+            // Check what inspections have been done
+            const hasLehre = batchInspections.some(entry => entry.inspektion === 'L');
+            const hasMass = batchInspections.some(entry => entry.inspektion === 'M');
+            const hasSicht = batchInspections.some(entry => entry.inspektion === 'S');
+
+            // Sequential order: Lehre -> Maß -> Sicht
+            if (requestedType === 'lehre') {
+                // Lehre is always first, so always allowed
+                return null;
+            }
+
+            if (requestedType === 'mass') {
+                if (!hasLehre) {
+                    return 'Maß-Prüfung kann erst nach Lehre-Prüfung durchgeführt werden.';
+                }
+                return null;
+            }
+
+            if (requestedType === 'sicht') {
+                if (!hasLehre) {
+                    return 'Sicht-Prüfung kann erst nach Lehre-Prüfung durchgeführt werden.';
+                }
+                if (!hasMass) {
+                    return 'Sicht-Prüfung kann erst nach Maß-Prüfung durchgeführt werden.';
+                }
+                return null;
+            }
+
+            return null;
         }
 
         function showScanSimulation() {
@@ -1856,6 +1903,24 @@
 
         // Scan Confirmation
         function showScanConfirmation() {
+            // Validate inspection sequence if sequential mode is enabled
+            if (state.partTypeStandards.Housing.inspectionSequence === 'sequential') {
+                const validationError = validateInspectionSequence(
+                    state.currentInspection.articleNumber,
+                    state.currentInspection.inspectionType
+                );
+                if (validationError) {
+                    showModal({
+                        title: 'Reihenfolge nicht eingehalten',
+                        content: `<p>${validationError}</p>`,
+                        buttons: [
+                            { text: 'Zurück zum Menü', action: () => { closeModal(); showSerieMenu(); } }
+                        ]
+                    });
+                    return;
+                }
+            }
+
             addToHistory(showScanSimulation);
             const content = document.getElementById('contentArea');
             content.innerHTML = `
@@ -1925,8 +1990,10 @@
             );
             const pruefungsNummer = inspectionsForBatch.length + 1;
 
-            // Determine inspection type: M (Maß) or L (Lehre)
-            const inspektion = state.currentInspection.inspectionType === 'mass' ? 'M' : 'L';
+            // Determine inspection type: M (Maß), L (Lehre), or S (Sicht)
+            let inspektion = 'L';
+            if (state.currentInspection.inspectionType === 'mass') inspektion = 'M';
+            else if (state.currentInspection.inspectionType === 'sicht') inspektion = 'S';
 
             // Create entry
             const entry = {
@@ -2054,8 +2121,8 @@
             // Store inspectors in state for modal
             state.currentInspection.otherInspectors = inspectors;
 
-            // Get defect types from standards
-            const defectTypes = state.partTypeStandards.Housing.defectTypes;
+            // Get defect types from standards based on inspection type
+            const defectTypes = state.partTypeStandards.Housing.defectTypes[type];
 
             const content = document.getElementById('contentArea');
             content.innerHTML = `
@@ -2189,8 +2256,8 @@
         }
 
         function updateDefectCounters() {
-            // Get defect types from standards
-            const defectTypes = state.partTypeStandards.Housing.defectTypes;
+            // Get defect types from standards based on current inspection type
+            const defectTypes = state.partTypeStandards.Housing.defectTypes[state.currentInspection.inspectionType];
 
             defectTypes.forEach((type, i) => {
                 const counter = document.getElementById(`counter-${i}`);
@@ -2668,12 +2735,33 @@
         function openStandards() {
             const standards = state.partTypeStandards.Housing;
 
-            const defectTagsHtml = standards.defectTypes.map((defect, index) => `
-                <div class="defect-tag">
-                    ${defect}
-                    <button class="defect-tag-remove" onclick="removeDefectType(${index})">×</button>
-                </div>
-            `).join('');
+            // Create defect tags for each inspection type
+            const createDefectSection = (type, label) => {
+                const defects = standards.defectTypes[type];
+                const defectTagsHtml = defects.map((defect, index) => `
+                    <div class="defect-tag">
+                        ${defect}
+                        <button class="defect-tag-remove" onclick="removeDefectType('${type}', ${index})">×</button>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="standards-section">
+                        <h3>Fehlermerkmale - ${label}</h3>
+                        <div class="defect-tags" id="defectTags-${type}">
+                            ${defectTagsHtml}
+                        </div>
+                        <input
+                            type="text"
+                            class="standards-input"
+                            id="newDefectInput-${type}"
+                            placeholder="Neues Fehlermerkmal für ${label} eingeben"
+                            onkeypress="if(event.key === 'Enter') addDefectType('${type}')"
+                        />
+                        <button class="add-defect-btn" onclick="addDefectType('${type}')">+ Fehlermerkmal hinzufügen</button>
+                    </div>
+                `;
+            };
 
             const modal = document.createElement('div');
             modal.className = 'modal';
@@ -2700,20 +2788,9 @@
                             />
                         </div>
 
-                        <div class="standards-section">
-                            <h3>Fehlermerkmale</h3>
-                            <div class="defect-tags" id="defectTags">
-                                ${defectTagsHtml}
-                            </div>
-                            <input
-                                type="text"
-                                class="standards-input"
-                                id="newDefectInput"
-                                placeholder="Neues Fehlermerkmal eingeben"
-                                onkeypress="if(event.key === 'Enter') addDefectType()"
-                            />
-                            <button class="add-defect-btn" onclick="addDefectType()">+ Fehlermerkmal hinzufügen</button>
-                        </div>
+                        ${createDefectSection('lehre', 'Lehre')}
+                        ${createDefectSection('mass', 'Maß')}
+                        ${createDefectSection('sicht', 'Sicht')}
 
                         <div class="standards-section">
                             <h3>Inspektionsreihenfolge</h3>
@@ -2721,12 +2798,12 @@
                                 <div class="sequence-option ${standards.inspectionSequence === 'sequential' ? 'selected' : ''}"
                                      onclick="setInspectionSequence('sequential')">
                                     <h4>Sequenziell</h4>
-                                    <p>Erst Maß, dann Lehre</p>
+                                    <p>Lehre → Maß → Sicht</p>
                                 </div>
                                 <div class="sequence-option ${standards.inspectionSequence === 'both' ? 'selected' : ''}"
                                      onclick="setInspectionSequence('both')">
                                     <h4>Frei wählbar</h4>
-                                    <p>Maß oder Lehre möglich</p>
+                                    <p>Beliebige Reihenfolge</p>
                                 </div>
                             </div>
                         </div>
@@ -2741,30 +2818,30 @@
             document.body.appendChild(modal);
         }
 
-        function addDefectType() {
-            const input = document.getElementById('newDefectInput');
+        function addDefectType(inspectionType) {
+            const input = document.getElementById(`newDefectInput-${inspectionType}`);
             const defectName = input.value.trim();
 
-            if (defectName && !state.partTypeStandards.Housing.defectTypes.includes(defectName)) {
-                state.partTypeStandards.Housing.defectTypes.push(defectName);
+            if (defectName && !state.partTypeStandards.Housing.defectTypes[inspectionType].includes(defectName)) {
+                state.partTypeStandards.Housing.defectTypes[inspectionType].push(defectName);
                 input.value = '';
 
                 // Update display
-                updateDefectTags();
+                updateDefectTags(inspectionType);
             }
         }
 
-        function removeDefectType(index) {
-            state.partTypeStandards.Housing.defectTypes.splice(index, 1);
-            updateDefectTags();
+        function removeDefectType(inspectionType, index) {
+            state.partTypeStandards.Housing.defectTypes[inspectionType].splice(index, 1);
+            updateDefectTags(inspectionType);
         }
 
-        function updateDefectTags() {
-            const container = document.getElementById('defectTags');
-            const defectTagsHtml = state.partTypeStandards.Housing.defectTypes.map((defect, index) => `
+        function updateDefectTags(inspectionType) {
+            const container = document.getElementById(`defectTags-${inspectionType}`);
+            const defectTagsHtml = state.partTypeStandards.Housing.defectTypes[inspectionType].map((defect, index) => `
                 <div class="defect-tag">
                     ${defect}
-                    <button class="defect-tag-remove" onclick="removeDefectType(${index})">×</button>
+                    <button class="defect-tag-remove" onclick="removeDefectType('${inspectionType}', ${index})">×</button>
                 </div>
             `).join('');
             container.innerHTML = defectTagsHtml;
