@@ -1,6 +1,6 @@
 const CACHE_NAME = 'qs-pruefung-v11';
 const urlsToCache = [
-  './test.html',
+  './test2.html',
   './manifest.json',
   'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'
 ];
