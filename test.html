@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Qualitätsprüfung - Tablet Interface</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#2a5298">
+
+    <!-- Apple PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="QS Prüfung">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%232a5298'/><path d='M96 40 L140 96 L96 152 L52 96 Z' fill='white'/><circle cx='96' cy='96' r='15' fill='%23ef4444'/></svg>">
     <style>
         * {
             margin: 0;
@@ -701,99 +711,81 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-       /* Updated hover effect - faster and cleaner */
-.defect-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
-    opacity: 0;
-    transition: opacity 0.2s ease; /* Reduced from 0.3s */
-    z-index: 0;
-    border-radius: 14px;
-}
+        /* Hover gradient (blue) */
+        .defect-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 0;
+            border-radius: 14px;
+        }
 
-/* Faster hover transform */
-.defect-btn:hover:not(.filling):not(.shattering) {
-    border-color: transparent;
-    color: white;
-    transform: translateY(-3px); /* Reduced lift */
-    box-shadow: 0 8px 20px rgba(42, 82, 152, 0.2); /* Reduced shadow */
-    transition: all 0.2s ease; /* Faster transition */
-}
+        .defect-btn:hover:not(.clicked)::before {
+            opacity: 1;
+        }
 
-/* Optimized shatter animation */
-@keyframes shatterButton {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
-    50% {
-        transform: scale(1.05);
-        opacity: 0.8;
-    }
-    100% {
-        transform: scale(0.95);
-        opacity: 0;
-    }
-}
+        .defect-btn > * {
+            position: relative;
+            z-index: 1;
+            transition: color 0.15s ease;
+        }
 
-/* Faster shatter duration */
-.defect-btn.shattering {
-    animation: shatterButton 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+        .defect-btn:hover:not(.clicked) {
+            border-color: transparent;
+            color: white;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(42, 82, 152, 0.25);
+        }
 
-/* Simplified liquid fill animation */
-@keyframes liquidFill {
-    0% {
-        height: 0%;
-    }
-    100% {
-        height: 100%;
-    }
-}
+        /* Fast click animation - 0.25s total */
+        .defect-btn.clicked {
+            animation: quickPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
 
-.defect-btn.filling .defect-btn-liquid {
-    animation: liquidFill 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; /* Reduced from 1s */
-}
+        @keyframes quickPop {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 0 8px rgba(42, 82, 152, 0.3);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0px rgba(42, 82, 152, 0);
+            }
+        }
 
-/* Optimized explosion effect */
-@keyframes explosionWave1 {
-    0% {
-        opacity: 0;
-        transform: scale(0.8);
-    }
-    50% {
-        opacity: 0.6;
-    }
-    100% {
-        opacity: 0;
-        transform: scale(1.2);
-    }
-}
+        .defect-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, rgba(42, 82, 152, 0.4) 0%, transparent 70%);
+            opacity: 0;
+            border-radius: 14px;
+            z-index: 0;
+        }
 
-@keyframes explosionWave2 {
-    0% {
-        opacity: 0;
-        transform: scale(0.7);
-    }
-    50% {
-        opacity: 0.4;
-    }
-    100% {
-        opacity: 0;
-        transform: scale(1.3);
-    }
-}
+        .defect-btn.clicked::after {
+            animation: flashEffect 0.25s ease-out;
+        }
 
-/* Faster explosion animations */
-.defect-btn.shattering .defect-btn-explosion::before {
-    animation: explosionWave1 0.3s ease-out;
-}
-
-.defect-btn.shattering .defect-btn-explosion::after {
-    animation: explosionWave2 0.3s 0.05s ease-out; /* Reduced delay to 0.05s */
-}
+        @keyframes flashEffect {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1.2);
+            }
+        }
 
         .defect-btn h3 {
             font-size: 19px;
@@ -1593,8 +1585,6 @@
                         ${defectTypes.map((defect, i) => `
                             <button class="defect-btn animate-scale stagger-${(i % 4) + 1}"
                                     onclick="registerDefect('${defect}', event)">
-                                <div class="defect-btn-liquid"></div>
-                                <div class="defect-btn-explosion"></div>
                                 <span class="defect-counter" id="counter-${i}">0</span>
                                 <h3>${defect}</h3>
                             </button>
@@ -1674,36 +1664,27 @@
             const button = event.currentTarget;
 
             // Prevent multiple clicks during animation
-            if (button.classList.contains('filling') || button.classList.contains('shattering')) {
+            if (button.classList.contains('clicked')) {
                 return;
             }
 
-            // Start fill animation
-            button.classList.add('filling');
+            // Add click animation
+            button.classList.add('clicked');
 
-            // After 1 second, shatter and register
+            // Register the defect
+            if (!state.currentInspection.defects[type]) {
+                state.currentInspection.defects[type] = 0;
+            }
+            state.currentInspection.defects[type]++;
+            state.currentInspection.totalDefects++;
+
+            // Update UI
+            updateDefectCounters();
+
+            // Remove class after animation
             setTimeout(() => {
-                // Remove filling class
-                button.classList.remove('filling');
-
-                // Add shatter animation
-                button.classList.add('shattering');
-
-                // Register the defect
-                if (!state.currentInspection.defects[type]) {
-                    state.currentInspection.defects[type] = 0;
-                }
-                state.currentInspection.defects[type]++;
-                state.currentInspection.totalDefects++;
-
-                // Update UI
-                updateDefectCounters();
-
-                // Remove shatter class and reset button after animation
-                setTimeout(() => {
-                    button.classList.remove('shattering');
-                }, 600);
-            }, 1000);
+                button.classList.remove('clicked');
+            }, 250);
         }
 
         function updateDefectCounters() {
@@ -1857,6 +1838,17 @@
             document.getElementById('personnelNumber').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') login();
             });
+
+            // Register Service Worker for PWA
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registered:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            }
         });
     </script>
 </body>
