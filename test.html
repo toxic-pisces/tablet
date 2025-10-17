@@ -1286,6 +1286,132 @@
             box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
         }
 
+        /* Database Modal */
+        .database-modal {
+            background: white;
+            border-radius: 20px;
+            width: 95%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .database-header {
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+            padding: 28px 35px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .database-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin: 0;
+        }
+
+        .database-close-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .database-close-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .database-body {
+            padding: 35px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .database-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .database-table thead {
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+            color: white;
+        }
+
+        .database-table th {
+            padding: 18px 20px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .database-table tbody tr {
+            border-bottom: 1px solid #e2e8f0;
+            transition: background 0.2s ease;
+        }
+
+        .database-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .database-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .database-table td {
+            padding: 16px 20px;
+            font-size: 15px;
+            color: #1a202c;
+        }
+
+        .database-table td:first-child {
+            font-weight: 700;
+            color: #2a5298;
+        }
+
+        .database-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .database-empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .database-empty-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .database-empty-subtext {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
         /* Animated Classes */
         .animate-in {
             animation: fadeIn 0.5s ease-out;
@@ -1362,7 +1488,8 @@
             <button class="sidebar-btn" onclick="openStatistics()" title="Statistik">📊</button>
             <button class="sidebar-btn" onclick="toggleLanguage()" title="Sprache" id="languageBtn">🇩🇪</button>
             <button class="sidebar-btn" onclick="togglePause()" title="Pause">⏸️</button>
-            
+            <button class="sidebar-btn" onclick="openDatabase()" title="Datenbank">🗄️</button>
+
             <button class="undo-btn" onclick="goBack()" title="Zurück">↶</button>
         </div>
 
@@ -1398,7 +1525,8 @@
                 inspectionType: '',
                 defects: {},
                 totalDefects: 0
-            }
+            },
+            tbkDatabase: [] // Array of {batchNummer, tbkNummer, laufkarte, chargenr}
         };
 
         // Translations
@@ -1605,14 +1733,18 @@
                 <div class="data-confirmation animate-scale">
                     <h2 class="animate-slide-up">Teilebegleitkarte gescannt</h2>
                     <div class="data-row animate-slide-right stagger-1">
-                        <span class="data-label">Artikelnummer:</span>
+                        <span class="data-label">TBK Nummer:</span>
                         <span class="data-value">${state.currentInspection.articleNumber}</span>
                     </div>
                     <div class="data-row animate-slide-right stagger-2">
+                        <span class="data-label">Artikel:</span>
+                        <span class="data-value">Housing</span>
+                    </div>
+                    <div class="data-row animate-slide-right stagger-3">
                         <span class="data-label">TZ:</span>
                         <span class="data-value">${state.currentInspection.tz}</span>
                     </div>
-                    <button class="btn-primary animate-slide-up stagger-3" onclick="showQuantitySelection()">${t('confirm')}</button>
+                    <button class="btn-primary animate-slide-up stagger-4" onclick="showQuantitySelection()">${t('confirm')}</button>
                 </div>
             `;
         }
@@ -1695,18 +1827,22 @@
                 <div class="inspection-container">
                     <div class="info-row">
                         <div class="info-card animate-slide-up stagger-1">
-                            <h3>${t('articleNumber')}</h3>
+                            <h3>TBK Nummer</h3>
                             <p>${state.currentInspection.articleNumber}</p>
                         </div>
                         <div class="info-card animate-slide-up stagger-2">
+                            <h3>Artikel</h3>
+                            <p>Housing</p>
+                        </div>
+                        <div class="info-card animate-slide-up stagger-3">
                             <h3>${t('totalQuantity')}</h3>
                             <p>${state.currentInspection.quantity}</p>
                         </div>
-                        <div class="info-card animate-slide-up stagger-3">
+                        <div class="info-card animate-slide-up stagger-4">
                             <h3>${t('defectCount')}</h3>
                             <p id="totalDefects">0</p>
                         </div>
-                        <div class="info-card animate-slide-up stagger-4" style="cursor: pointer;" onclick="showInspectorModal()">
+                        <div class="info-card animate-slide-up stagger-5" style="cursor: pointer;" onclick="showInspectorModal()">
                             <h3>${t('inspector')} (${otherType})</h3>
                             <p class="inspector-status">
                                 <span class="status-indicator status-${inspectors[0].status}"></span>
@@ -1773,7 +1909,7 @@
                             ${avatarsHtml}
                         </div>
                         <h2>${type} Prüfung</h2>
-                        <p>TZ ${state.currentInspection.tz} • Artikel ${state.currentInspection.articleNumber}</p>
+                        <p>TZ ${state.currentInspection.tz} • TBK ${state.currentInspection.articleNumber} • Artikel Housing</p>
                     </div>
                     <div class="inspector-body">
                         <div class="inspector-info-grid">
@@ -2125,12 +2261,102 @@
                 modal.remove();
             }
 
-            // Save the scanned barcode as article number
+            // Save the scanned barcode as TBK number and add to database
             state.currentInspection.articleNumber = barcode;
             state.currentInspection.tz = Math.floor(Math.random() * 11);
 
+            // Add TBK to database if not already exists
+            addTbkToDatabase(barcode);
+
             // Show confirmation page
             showScanConfirmation();
+        }
+
+        // TBK Database Functions
+        function addTbkToDatabase(tbkNummer) {
+            // Check if TBK already exists
+            const exists = state.tbkDatabase.some(entry => entry.tbkNummer === tbkNummer);
+
+            if (!exists) {
+                // Generate random 6-digit Laufkarte and 8-digit Chargenr
+                const laufkarte = Math.floor(100000 + Math.random() * 900000).toString();
+                const chargenr = Math.floor(10000000 + Math.random() * 90000000).toString();
+
+                // Add new entry
+                state.tbkDatabase.push({
+                    batchNummer: state.tbkDatabase.length + 1,
+                    tbkNummer: tbkNummer,
+                    laufkarte: laufkarte,
+                    chargenr: chargenr
+                });
+            }
+        }
+
+        function openDatabase() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'databaseModal';
+            modal.onclick = (e) => {
+                if (e.target === modal) closeDatabase();
+            };
+
+            let tableContent = '';
+
+            if (state.tbkDatabase.length === 0) {
+                tableContent = `
+                    <div class="database-empty">
+                        <div class="database-empty-icon">🗄️</div>
+                        <div class="database-empty-text">Keine TBK-Daten vorhanden</div>
+                        <div class="database-empty-subtext">Scanne eine TBK, um Einträge zu erstellen</div>
+                    </div>
+                `;
+            } else {
+                const rows = state.tbkDatabase.map(entry => `
+                    <tr>
+                        <td>${entry.batchNummer}</td>
+                        <td>${entry.tbkNummer}</td>
+                        <td>${entry.laufkarte}</td>
+                        <td>${entry.chargenr}</td>
+                    </tr>
+                `).join('');
+
+                tableContent = `
+                    <table class="database-table">
+                        <thead>
+                            <tr>
+                                <th>BatchNummer</th>
+                                <th>TBK Nummer</th>
+                                <th>Laufkarte</th>
+                                <th>ChargenNr</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            modal.innerHTML = `
+                <div class="database-modal">
+                    <div class="database-header">
+                        <h2>🗄️ TBK Datenbank</h2>
+                        <button class="database-close-btn" onclick="closeDatabase()">×</button>
+                    </div>
+                    <div class="database-body">
+                        ${tableContent}
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        }
+
+        function closeDatabase() {
+            const modal = document.getElementById('databaseModal');
+            if (modal) {
+                modal.remove();
+            }
         }
 
         function closeBarcodeScanner() {
