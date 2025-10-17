@@ -1495,39 +1495,188 @@
             transform: translateY(-1px);
         }
 
-        .inspection-sequence-options {
-            display: flex;
-            gap: 15px;
-        }
-
-        .sequence-option {
-            flex: 1;
-            padding: 16px;
+        /* Sequence Builder */
+        .sequence-builder {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 12px;
             border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        }
+
+        .sequence-builder-title {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 15px;
             text-align: center;
+            font-weight: 600;
         }
 
-        .sequence-option:hover {
+        .sequence-builder-subtitle {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .available-inspections {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .inspection-card {
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+            color: white;
+            padding: 14px 20px;
+            border-radius: 10px;
+            cursor: grab;
+            user-select: none;
+            font-weight: 700;
+            font-size: 15px;
+            box-shadow: 0 4px 12px rgba(42, 82, 152, 0.3);
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .inspection-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(42, 82, 152, 0.4);
+        }
+
+        .inspection-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .inspection-card.lehre {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .inspection-card.mass {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .inspection-card.sicht {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .timeline {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .timeline-step {
+            flex: 1;
+            background: white;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 15px;
+            min-height: 120px;
+            transition: all 0.2s ease;
+        }
+
+        .timeline-step.drag-over {
             border-color: #2a5298;
+            background: #eff6ff;
+            border-style: solid;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
         }
 
-        .sequence-option.selected {
+        .timeline-step-header {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #64748b;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .timeline-step-number {
             background: #2a5298;
             color: white;
-            border-color: #2a5298;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
         }
 
-        .sequence-option h4 {
-            font-size: 15px;
-            margin-bottom: 5px;
+        .timeline-drop-zone {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 60px;
         }
 
-        .sequence-option p {
+        .timeline-card {
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+            position: relative;
+            cursor: grab;
+            transition: all 0.2s ease;
+        }
+
+        .timeline-card:hover {
+            transform: scale(1.02);
+        }
+
+        .timeline-card.lehre {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .timeline-card.mass {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .timeline-card.sicht {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .timeline-card-remove {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ef4444;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid white;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .timeline-card-remove:hover {
+            background: #dc2626;
+        }
+
+        .timeline-empty {
+            text-align: center;
+            color: #94a3b8;
             font-size: 13px;
-            opacity: 0.8;
+            padding: 20px;
         }
 
         /* Animated Classes */
@@ -1657,7 +1806,11 @@
                         sicht: ['n.i.O.']
                     },
                     inspectionTypes: ['lehre', 'mass', 'sicht'], // Available inspection types
-                    inspectionSequence: 'sequential' // 'sequential' (lehre -> mass -> sicht) or 'both' (any order)
+                    inspectionSequence: [
+                        ['lehre'],
+                        ['mass'],
+                        ['sicht']
+                    ] // Array of steps, each step is an array of inspection types
                 }
             }
         };
@@ -1852,37 +2005,51 @@
 
             const batchNummer = tbkEntry.batchNummer;
 
+            // Get inspection sequence from standards
+            const sequence = state.partTypeStandards.Housing.inspectionSequence;
+
+            // If sequence is empty, no validations needed
+            if (!sequence || sequence.length === 0) return null;
+
+            // Map inspection types to their short codes
+            const typeToCode = { 'lehre': 'L', 'mass': 'M', 'sicht': 'S' };
+            const codeToLabel = { 'L': 'Lehre', 'M': 'Maß', 'S': 'Sicht' };
+
             // Get all inspections for this batch
             const batchInspections = state.inspectionDatabase.filter(
                 entry => entry.batchNummer === batchNummer
             );
 
-            // Check what inspections have been done
-            const hasLehre = batchInspections.some(entry => entry.inspektion === 'L');
-            const hasMass = batchInspections.some(entry => entry.inspektion === 'M');
-            const hasSicht = batchInspections.some(entry => entry.inspektion === 'S');
-
-            // Sequential order: Lehre -> Maß -> Sicht
-            if (requestedType === 'lehre') {
-                // Lehre is always first, so always allowed
-                return null;
+            // Find which step the requested inspection is in
+            let requestedStepIndex = -1;
+            for (let i = 0; i < sequence.length; i++) {
+                if (sequence[i].includes(requestedType)) {
+                    requestedStepIndex = i;
+                    break;
+                }
             }
 
-            if (requestedType === 'mass') {
-                if (!hasLehre) {
-                    return 'Maß-Prüfung kann erst nach Lehre-Prüfung durchgeführt werden.';
-                }
-                return null;
+            // If inspection is not in sequence, it's disabled
+            if (requestedStepIndex === -1) {
+                const label = codeToLabel[typeToCode[requestedType]];
+                return `${label}-Prüfung ist in den Standards nicht aktiviert.`;
             }
 
-            if (requestedType === 'sicht') {
-                if (!hasLehre) {
-                    return 'Sicht-Prüfung kann erst nach Lehre-Prüfung durchgeführt werden.';
+            // Check if all inspections from previous steps have been completed
+            for (let stepIndex = 0; stepIndex < requestedStepIndex; stepIndex++) {
+                const requiredInspections = sequence[stepIndex];
+
+                // Check each inspection in this step
+                for (const requiredType of requiredInspections) {
+                    const requiredCode = typeToCode[requiredType];
+                    const hasCompleted = batchInspections.some(entry => entry.inspektion === requiredCode);
+
+                    if (!hasCompleted) {
+                        const requestedLabel = codeToLabel[typeToCode[requestedType]];
+                        const requiredLabel = codeToLabel[requiredCode];
+                        return `${requestedLabel}-Prüfung kann erst nach ${requiredLabel}-Prüfung durchgeführt werden.`;
+                    }
                 }
-                if (!hasMass) {
-                    return 'Sicht-Prüfung kann erst nach Maß-Prüfung durchgeführt werden.';
-                }
-                return null;
             }
 
             return null;
@@ -2794,17 +2961,10 @@
 
                         <div class="standards-section">
                             <h3>Inspektionsreihenfolge</h3>
-                            <div class="inspection-sequence-options">
-                                <div class="sequence-option ${standards.inspectionSequence === 'sequential' ? 'selected' : ''}"
-                                     onclick="setInspectionSequence('sequential')">
-                                    <h4>Sequenziell</h4>
-                                    <p>Lehre → Maß → Sicht</p>
-                                </div>
-                                <div class="sequence-option ${standards.inspectionSequence === 'both' ? 'selected' : ''}"
-                                     onclick="setInspectionSequence('both')">
-                                    <h4>Frei wählbar</h4>
-                                    <p>Beliebige Reihenfolge</p>
-                                </div>
+                            <div class="sequence-builder" id="sequenceBuilder">
+                                <div class="sequence-builder-title">🎯 Ziehe die Prüfungen in die Timeline (gleicher Schritt = parallel möglich)</div>
+                                <div class="available-inspections" id="availableInspections"></div>
+                                <div class="timeline" id="timeline"></div>
                             </div>
                         </div>
 
@@ -2816,6 +2976,182 @@
             `;
 
             document.body.appendChild(modal);
+
+            // Initialize the drag-and-drop sequence builder
+            initializeSequenceBuilder();
+        }
+
+        function initializeSequenceBuilder() {
+            const availableContainer = document.getElementById('availableInspections');
+            const timelineContainer = document.getElementById('timeline');
+
+            // Get current sequence from state
+            const currentSequence = state.partTypeStandards.Housing.inspectionSequence;
+
+            // Define all inspection types
+            const allInspections = ['lehre', 'mass', 'sicht'];
+            const inspectionLabels = {
+                'lehre': 'Lehre',
+                'mass': 'Maß',
+                'sicht': 'Sicht'
+            };
+
+            // Find which inspections are already in timeline
+            const usedInspections = new Set();
+            currentSequence.forEach(step => {
+                step.forEach(inspection => usedInspections.add(inspection));
+            });
+
+            // Render available inspections (not yet in timeline)
+            availableContainer.innerHTML = '<div class="sequence-builder-subtitle">Verfügbare Prüfungen:</div>';
+            allInspections.forEach(type => {
+                if (!usedInspections.has(type)) {
+                    availableContainer.innerHTML += createInspectionCard(type, inspectionLabels[type]);
+                }
+            });
+
+            // Render timeline with current sequence
+            timelineContainer.innerHTML = '<div class="sequence-builder-subtitle">Timeline (nacheinander):</div>';
+            for (let i = 0; i < 3; i++) {
+                const stepInspections = currentSequence[i] || [];
+                timelineContainer.innerHTML += `
+                    <div class="timeline-step" data-step="${i}" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                        <div class="timeline-step-label">Schritt ${i + 1}</div>
+                        ${stepInspections.map(type => createInspectionCard(type, inspectionLabels[type])).join('')}
+                    </div>
+                `;
+            }
+
+            // If no inspections in timeline, show helper text
+            if (usedInspections.size === 0) {
+                timelineContainer.innerHTML += '<div style="text-align: center; color: #64748b; margin-top: 20px; font-style: italic;">Ziehe Prüfungen hierher, um die Reihenfolge festzulegen</div>';
+            }
+        }
+
+        function createInspectionCard(type, label) {
+            return `
+                <div class="inspection-card ${type}" draggable="true" data-type="${type}" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)">
+                    <div class="inspection-card-icon">${type === 'lehre' ? '📏' : type === 'mass' ? '📐' : '👁️'}</div>
+                    <div class="inspection-card-label">${label}</div>
+                    <button class="inspection-card-remove" onclick="removeFromTimeline(event, '${type}')">×</button>
+                </div>
+            `;
+        }
+
+        let draggedElement = null;
+        let draggedType = null;
+
+        function handleDragStart(event) {
+            draggedElement = event.target;
+            draggedType = event.target.dataset.type;
+            event.target.style.opacity = '0.5';
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/html', event.target.innerHTML);
+        }
+
+        function handleDragEnd(event) {
+            event.target.style.opacity = '1';
+
+            // Remove drag-over styling from all steps
+            document.querySelectorAll('.timeline-step').forEach(step => {
+                step.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(event) {
+            if (event.preventDefault) {
+                event.preventDefault();
+            }
+
+            const step = event.target.closest('.timeline-step');
+            if (step) {
+                step.classList.add('drag-over');
+            }
+
+            event.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragLeave(event) {
+            const step = event.target.closest('.timeline-step');
+            if (step && !step.contains(event.relatedTarget)) {
+                step.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(event) {
+            if (event.stopPropagation) {
+                event.stopPropagation();
+            }
+
+            const step = event.target.closest('.timeline-step');
+            if (!step || !draggedElement || !draggedType) return false;
+
+            const stepIndex = parseInt(step.dataset.step);
+
+            // Check if card is coming from available inspections or from another step
+            const isFromAvailable = draggedElement.parentElement.id === 'availableInspections';
+            const isFromTimeline = draggedElement.parentElement.classList.contains('timeline-step');
+
+            if (isFromAvailable) {
+                // Add to timeline
+                addToTimelineStep(draggedType, stepIndex);
+            } else if (isFromTimeline) {
+                // Move between steps
+                const oldStepIndex = parseInt(draggedElement.parentElement.dataset.step);
+                if (oldStepIndex !== stepIndex) {
+                    removeFromTimelineStep(draggedType, oldStepIndex);
+                    addToTimelineStep(draggedType, stepIndex);
+                }
+            }
+
+            // Refresh the builder UI
+            initializeSequenceBuilder();
+
+            return false;
+        }
+
+        function addToTimelineStep(inspectionType, stepIndex) {
+            const sequence = state.partTypeStandards.Housing.inspectionSequence;
+
+            // Ensure the step array exists
+            while (sequence.length <= stepIndex) {
+                sequence.push([]);
+            }
+
+            // Add inspection to step if not already there
+            if (!sequence[stepIndex].includes(inspectionType)) {
+                sequence[stepIndex].push(inspectionType);
+            }
+        }
+
+        function removeFromTimelineStep(inspectionType, stepIndex) {
+            const sequence = state.partTypeStandards.Housing.inspectionSequence;
+
+            if (sequence[stepIndex]) {
+                const index = sequence[stepIndex].indexOf(inspectionType);
+                if (index > -1) {
+                    sequence[stepIndex].splice(index, 1);
+                }
+
+                // Remove empty steps from the end
+                while (sequence.length > 0 && sequence[sequence.length - 1].length === 0) {
+                    sequence.pop();
+                }
+            }
+        }
+
+        function removeFromTimeline(event, inspectionType) {
+            event.stopPropagation();
+
+            const card = event.target.closest('.inspection-card');
+            const step = card.parentElement;
+
+            if (step.classList.contains('timeline-step')) {
+                const stepIndex = parseInt(step.dataset.step);
+                removeFromTimelineStep(inspectionType, stepIndex);
+                initializeSequenceBuilder();
+            }
         }
 
         function addDefectType(inspectionType) {
