@@ -18,6 +18,9 @@
     <!-- Barcode Scanner Library -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
+    <!-- Simple Keyboard CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/css/index.css">
+
     <style>
         * {
             margin: 0;
@@ -104,9 +107,6 @@
             transition: all 0.2s;
             background: #f8fafc;
             touch-action: manipulation;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
         }
 
         .login-box input:focus {
@@ -1798,39 +1798,116 @@
             display: none !important;
         }
 
-        /* Prevent zoom on input focus (iOS) */
-        input, textarea, select {
-            font-size: 16px !important;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
+        /* Virtual Keyboard Styles */
+        .keyboard-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 10001;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            max-height: 50vh;
+            overflow: hidden;
         }
         
-        /* Additional iOS input fixes */
-        input[type="text"],
-        input[type="number"],
-        textarea {
-            -webkit-user-select: text;
-            user-select: text;
+        /* Shift login box up when keyboard is visible */
+        .login-container.keyboard-active .login-box {
+            transform: translateY(-25vh);
+            transition: transform 0.3s ease;
+        }
+
+        .keyboard-container.show {
+            transform: translateY(0);
+        }
+
+        .keyboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .keyboard-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .keyboard-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .keyboard-close:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .simple-keyboard {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        .simple-keyboard.hg-theme-default {
+            background: white;
+        }
+
+        .simple-keyboard .hg-button {
+            height: 50px;
+            font-size: 18px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .simple-keyboard .hg-button:active {
+            background: #2a5298;
+            color: white;
+        }
+
+        /* Hide native keyboard on iOS */
+        input[data-keyboard="true"] {
+            caret-color: transparent;
+        }
+
+        /* Prevent zoom on input focus (iOS) */
+        input {
+            font-size: 16px !important;
         }
     </style>
 </head>
 <body>
     <!-- Login Screen -->
     <div id="loginScreen" class="login-container">
-        <div class="version-badge">v0.3</div>
+        <div class="version-badge">v0.4</div>
         <div class="login-box">
             <h1 id="loginTitle">Qualitätsprüfung</h1>
             <input type="text" 
                    id="personnelNumber" 
                    placeholder="Personalnummer" 
                    maxlength="10"
-                   pattern="[0-9]*"
-                   inputmode="decimal"
-                   autocomplete="off"
-                   autocorrect="off"
-                   autocapitalize="off"
-                   spellcheck="false">
+                   inputmode="none"
+                   data-keyboard="true"
+                   data-keyboard-type="numeric">
             <button class="btn-primary" onclick="login()" id="loginBtn">Anmelden</button>
         </div>
     </div>
@@ -1867,7 +1944,155 @@
         </div>
     </div>
 
+    <!-- Virtual Keyboard -->
+    <div id="keyboardContainer" class="keyboard-container">
+        <div class="keyboard-header">
+            <span class="keyboard-title" id="keyboardTitle">Tastatur</span>
+            <button class="keyboard-close" onclick="hideKeyboard()">×</button>
+        </div>
+        <div id="keyboard" class="simple-keyboard"></div>
+    </div>
+
+    <!-- Simple Keyboard JS -->
+    <script src="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/index.js"></script>
+
     <script>
+        // Virtual Keyboard Setup
+        let keyboard = null;
+        let currentInput = null;
+
+        function initKeyboard() {
+            keyboard = new window.SimpleKeyboard.default({
+                onChange: input => onChange(input),
+                onKeyPress: button => onKeyPress(button),
+                layout: {
+                    default: [
+                        "1 2 3 4 5 6 7 8 9 0",
+                        "q w e r t z u i o p ü",
+                        "a s d f g h j k l ö ä",
+                        "{shift} y x c v b n m {backspace}",
+                        "{space}"
+                    ],
+                    shift: [
+                        "! \" § $ % & / ( ) =",
+                        "Q W E R T Z U I O P Ü",
+                        "A S D F G H J K L Ö Ä",
+                        "{shift} Y X C V B N M {backspace}",
+                        "{space}"
+                    ],
+                    numeric: [
+                        "1 2 3",
+                        "4 5 6",
+                        "7 8 9",
+                        "{backspace} 0 {enter}"
+                    ]
+                },
+                display: {
+                    "{backspace}": "⌫",
+                    "{enter}": "↵",
+                    "{shift}": "⇧",
+                    "{space}": "Leerzeichen"
+                },
+                theme: "hg-theme-default",
+                buttonTheme: [
+                    {
+                        class: "hg-blue",
+                        buttons: "{enter}"
+                    }
+                ]
+            });
+        }
+
+        function onChange(input) {
+            if (currentInput) {
+                currentInput.value = input;
+                currentInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+
+        function onKeyPress(button) {
+            if (button === "{shift}") {
+                handleShift();
+            } else if (button === "{enter}") {
+                if (currentInput) {
+                    // Trigger change event
+                    currentInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    currentInput.blur();
+                }
+                hideKeyboard();
+            }
+        }
+
+        function handleShift() {
+            let currentLayout = keyboard.options.layoutName;
+            let shiftToggle = currentLayout === "default" ? "shift" : "default";
+            keyboard.setOptions({
+                layoutName: shiftToggle
+            });
+        }
+
+        function showKeyboard(input) {
+            currentInput = input;
+            const keyboardType = input.getAttribute('data-keyboard-type');
+
+            if (!keyboard) {
+                initKeyboard();
+            }
+
+            // Set layout based on input type
+            if (keyboardType === 'numeric') {
+                keyboard.setOptions({
+                    layoutName: 'numeric'
+                });
+                document.getElementById('keyboardTitle').textContent = 'Nummernfeld';
+            } else {
+                keyboard.setOptions({
+                    layoutName: 'default'
+                });
+                document.getElementById('keyboardTitle').textContent = 'Tastatur';
+            }
+
+            keyboard.setInput(input.value);
+            document.getElementById('keyboardContainer').classList.add('show');
+            
+            // Shift login screen up if keyboard is shown on login
+            const loginScreen = document.getElementById('loginScreen');
+            if (loginScreen && !loginScreen.classList.contains('hidden')) {
+                loginScreen.classList.add('keyboard-active');
+            }
+
+            // Prevent native keyboard on iOS/PWA
+            input.setAttribute('readonly', 'readonly');
+            input.blur();
+            setTimeout(() => {
+                input.removeAttribute('readonly');
+                input.focus();
+            }, 100);
+        }
+
+        function hideKeyboard() {
+            const keyboardContainer = document.getElementById('keyboardContainer');
+            if (keyboardContainer) {
+                keyboardContainer.classList.remove('show');
+            }
+            
+            // Remove keyboard-active class from login screen
+            const loginScreen = document.getElementById('loginScreen');
+            if (loginScreen) {
+                loginScreen.classList.remove('keyboard-active');
+            }
+            
+            // Blur current input
+            if (currentInput) {
+                currentInput.blur();
+                currentInput = null;
+            }
+            
+            // Reset keyboard
+            if (keyboard) {
+                keyboard.setInput('');
+            }
+        }
 
         // Global State
         let state = {
@@ -1980,6 +2205,7 @@
         function login() {
             const input = document.getElementById('personnelNumber');
             if (input.value.trim()) {
+                hideKeyboard(); // Close keyboard before transitioning
                 state.personnelNumber = input.value.trim();
                 state.userName = 'P-' + state.personnelNumber;
                 document.getElementById('userName').textContent = state.userName;
@@ -2334,17 +2560,14 @@
             content.innerHTML = `
                 <div class="input-container animate-scale">
                     <h2 class="animate-slide-up">${t('quantity')}</h2>
-                    <input type="text" 
+                    <input type="number" 
                            class="animate-slide-up stagger-2" 
                            id="quantityInput" 
                            min="1" 
                            max="999"
-                           pattern="[0-9]*"
-                           inputmode="decimal"
-                           autocomplete="off"
-                           autocorrect="off"
-                           autocapitalize="off"
-                           spellcheck="false">
+                           inputmode="none"
+                           data-keyboard="true"
+                           data-keyboard-type="numeric">
                     <button class="btn-primary animate-slide-up stagger-3" onclick="submitManualQuantity()">${t('confirm')}</button>
                 </div>
             `;
@@ -2356,6 +2579,7 @@
         function submitManualQuantity() {
             const input = document.getElementById('quantityInput');
             const qty = parseInt(input.value);
+            hideKeyboard(); // Close keyboard before proceeding
             if (qty > 0) {
                 setQuantity(qty);
             } else {
@@ -2702,11 +2926,9 @@
                                 type="text"
                                 id="manualBarcodeInput"
                                 placeholder="Barcode eingeben"
-                                inputmode="text"
-                                autocomplete="off"
-                                autocorrect="off"
-                                autocapitalize="off"
-                                spellcheck="false"
+                                inputmode="none"
+                                data-keyboard="true"
+                                data-keyboard-type="default"
                                 onkeypress="if(event.key === 'Enter') submitManualBarcode()"
                             />
                         </div>
@@ -2798,6 +3020,8 @@
             const barcode = input.value.trim();
 
             if (barcode.length > 0) {
+                hideKeyboard(); // Close keyboard before proceeding
+                
                 // Vibration feedback
                 if ('vibrate' in navigator) {
                     navigator.vibrate(200);
@@ -3029,7 +3253,9 @@
                             class="standards-input"
                             id="newDefectInput-${type}"
                             placeholder="Neues Fehlermerkmal für ${label} eingeben"
-                            inputmode="text"
+                            inputmode="none"
+                            data-keyboard="true"
+                            data-keyboard-type="default"
                             onkeypress="if(event.key === 'Enter') addDefectType('${type}')"
                         />
                         <button class="add-defect-btn" onclick="addDefectType('${type}')">+ Fehlermerkmal hinzufügen</button>
@@ -3054,17 +3280,14 @@
                         <div class="standards-section">
                             <h3>Behälterkapazität</h3>
                             <input
-                                type="text"
+                                type="number"
                                 class="standards-input"
                                 id="containerCapacity"
                                 value="${standards.containerCapacity}"
                                 placeholder="Anzahl Teile pro Behälter"
-                                pattern="[0-9]*"
-                                inputmode="decimal"
-                                autocomplete="off"
-                                autocorrect="off"
-                                autocapitalize="off"
-                                spellcheck="false"
+                                inputmode="none"
+                                data-keyboard="true"
+                                data-keyboard-type="numeric"
                             />
                         </div>
 
@@ -3460,6 +3683,7 @@
             if (defectName && !state.partTypeStandards.Housing.defectTypes[inspectionType].includes(defectName)) {
                 state.partTypeStandards.Housing.defectTypes[inspectionType].push(defectName);
                 input.value = '';
+                hideKeyboard(); // Close keyboard after adding
 
                 // Update display
                 updateDefectTags(inspectionType);
@@ -3493,6 +3717,7 @@
         }
 
         function saveStandards() {
+            hideKeyboard(); // Close keyboard before saving
             const capacity = document.getElementById('containerCapacity').value;
             state.partTypeStandards.Housing.containerCapacity = parseInt(capacity);
 
@@ -3515,23 +3740,45 @@
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', () => {
             // Enable Enter key for login
-            const personnelInput = document.getElementById('personnelNumber');
-            
-            // Only allow numbers
-            personnelInput.addEventListener('input', (e) => {
-                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            document.getElementById('personnelNumber').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') login();
             });
-            
-            personnelInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    login();
-                } else if (!/[0-9]/.test(e.key)) {
+
+            // Attach keyboard to all inputs with data-keyboard attribute
+            document.addEventListener('focusin', (e) => {
+                if (e.target.hasAttribute('data-keyboard')) {
                     e.preventDefault();
+                    e.target.blur();
+                    setTimeout(() => {
+                        showKeyboard(e.target);
+                    }, 50);
                 }
             });
             
-            // DON'T auto-focus - let user tap manually (iOS workaround)
-            // Some iPads block keyboard if auto-focused on page load
+            // Additional click handler for PWA/iOS
+            document.addEventListener('click', (e) => {
+                if (e.target.hasAttribute('data-keyboard') && !e.target.hasAttribute('readonly')) {
+                    e.preventDefault();
+                    e.target.blur();
+                    setTimeout(() => {
+                        showKeyboard(e.target);
+                    }, 50);
+                }
+            });
+
+            // Close keyboard when clicking outside (with slight delay to prevent conflicts)
+            document.addEventListener('click', (e) => {
+                setTimeout(() => {
+                    const keyboardContainer = document.getElementById('keyboardContainer');
+                    if (keyboardContainer && 
+                        keyboardContainer.classList.contains('show') &&
+                        !keyboardContainer.contains(e.target) && 
+                        !e.target.hasAttribute('data-keyboard') &&
+                        e.target !== currentInput) {
+                        hideKeyboard();
+                    }
+                }, 100);
+            });
 
             // Register Service Worker for PWA
             if ('serviceWorker' in navigator) {
