@@ -1,4 +1,4 @@
-const CACHE_NAME = 'qs-pruefung-v16';
+const CACHE_NAME = 'qs-pruefung-v17';
 const urlsToCache = [
   './test2.html',
   './manifest.json',
