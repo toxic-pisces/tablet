@@ -104,6 +104,9 @@
             transition: all 0.2s;
             background: #f8fafc;
             touch-action: manipulation;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
 
         .login-box input:focus {
@@ -1796,22 +1799,38 @@
         }
 
         /* Prevent zoom on input focus (iOS) */
-        input {
+        input, textarea, select {
             font-size: 16px !important;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        /* Additional iOS input fixes */
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            -webkit-user-select: text;
+            user-select: text;
         }
     </style>
 </head>
 <body>
     <!-- Login Screen -->
     <div id="loginScreen" class="login-container">
-        <div class="version-badge">v0.4</div>
+        <div class="version-badge">v0.3</div>
         <div class="login-box">
             <h1 id="loginTitle">Qualitätsprüfung</h1>
-            <input type="number" 
+            <input type="text" 
                    id="personnelNumber" 
                    placeholder="Personalnummer" 
                    maxlength="10"
-                   pattern="[0-9]*">
+                   pattern="[0-9]*"
+                   inputmode="decimal"
+                   autocomplete="off"
+                   autocorrect="off"
+                   autocapitalize="off"
+                   spellcheck="false">
             <button class="btn-primary" onclick="login()" id="loginBtn">Anmelden</button>
         </div>
     </div>
@@ -2315,12 +2334,17 @@
             content.innerHTML = `
                 <div class="input-container animate-scale">
                     <h2 class="animate-slide-up">${t('quantity')}</h2>
-                    <input type="number" 
+                    <input type="text" 
                            class="animate-slide-up stagger-2" 
                            id="quantityInput" 
                            min="1" 
                            max="999"
-                           inputmode="numeric">
+                           pattern="[0-9]*"
+                           inputmode="decimal"
+                           autocomplete="off"
+                           autocorrect="off"
+                           autocapitalize="off"
+                           spellcheck="false">
                     <button class="btn-primary animate-slide-up stagger-3" onclick="submitManualQuantity()">${t('confirm')}</button>
                 </div>
             `;
@@ -2679,6 +2703,10 @@
                                 id="manualBarcodeInput"
                                 placeholder="Barcode eingeben"
                                 inputmode="text"
+                                autocomplete="off"
+                                autocorrect="off"
+                                autocapitalize="off"
+                                spellcheck="false"
                                 onkeypress="if(event.key === 'Enter') submitManualBarcode()"
                             />
                         </div>
@@ -3026,12 +3054,17 @@
                         <div class="standards-section">
                             <h3>Behälterkapazität</h3>
                             <input
-                                type="number"
+                                type="text"
                                 class="standards-input"
                                 id="containerCapacity"
                                 value="${standards.containerCapacity}"
                                 placeholder="Anzahl Teile pro Behälter"
-                                inputmode="numeric"
+                                pattern="[0-9]*"
+                                inputmode="decimal"
+                                autocomplete="off"
+                                autocorrect="off"
+                                autocapitalize="off"
+                                spellcheck="false"
                             />
                         </div>
 
@@ -3482,9 +3515,25 @@
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', () => {
             // Enable Enter key for login
-            document.getElementById('personnelNumber').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') login();
+            const personnelInput = document.getElementById('personnelNumber');
+            
+            // Only allow numbers
+            personnelInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
             });
+            
+            personnelInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    login();
+                } else if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                }
+            });
+            
+            // Focus input on load (helps iOS keyboard)
+            setTimeout(() => {
+                personnelInput.focus();
+            }, 300);
 
             // Register Service Worker for PWA
             if ('serviceWorker' in navigator) {
