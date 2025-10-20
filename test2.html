@@ -1807,11 +1807,11 @@
         <div class="version-badge">v0.3</div>
         <div class="login-box">
             <h1 id="loginTitle">Qualitätsprüfung</h1>
-            <input type="text" 
+            <input type="number" 
                    id="personnelNumber" 
                    placeholder="Personalnummer" 
                    maxlength="10"
-                   inputmode="numeric">
+                   pattern="[0-9]*">
             <button class="btn-primary" onclick="login()" id="loginBtn">Anmelden</button>
         </div>
     </div>
