@@ -1898,7 +1898,7 @@
 <body>
     <!-- Login Screen -->
     <div id="loginScreen" class="login-container">
-        <div class="version-badge">v0.4</div>
+        <div class="version-badge">v0.5</div>
         <div class="login-box">
             <h1 id="loginTitle">Qualitätsprüfung</h1>
             <input type="text" 
@@ -2082,9 +2082,15 @@
                 loginScreen.classList.remove('keyboard-active');
             }
             
-            // Blur current input
+            // Blur and mark current input as processed
             if (currentInput) {
                 currentInput.blur();
+                currentInput.setAttribute('data-keyboard-closed', 'true');
+                setTimeout(() => {
+                    if (currentInput) {
+                        currentInput.removeAttribute('data-keyboard-closed');
+                    }
+                }, 500);
                 currentInput = null;
             }
             
@@ -3746,7 +3752,7 @@
 
             // Attach keyboard to all inputs with data-keyboard attribute
             document.addEventListener('focusin', (e) => {
-                if (e.target.hasAttribute('data-keyboard')) {
+                if (e.target.hasAttribute('data-keyboard') && !e.target.hasAttribute('data-keyboard-closed')) {
                     e.preventDefault();
                     e.target.blur();
                     setTimeout(() => {
@@ -3757,7 +3763,9 @@
             
             // Additional click handler for PWA/iOS
             document.addEventListener('click', (e) => {
-                if (e.target.hasAttribute('data-keyboard') && !e.target.hasAttribute('readonly')) {
+                if (e.target.hasAttribute('data-keyboard') && 
+                    !e.target.hasAttribute('readonly') && 
+                    !e.target.hasAttribute('data-keyboard-closed')) {
                     e.preventDefault();
                     e.target.blur();
                     setTimeout(() => {
@@ -3766,18 +3774,17 @@
                 }
             });
 
-            // Close keyboard when clicking outside (with slight delay to prevent conflicts)
+            // Close keyboard when clicking outside
             document.addEventListener('click', (e) => {
-                setTimeout(() => {
-                    const keyboardContainer = document.getElementById('keyboardContainer');
-                    if (keyboardContainer && 
-                        keyboardContainer.classList.contains('show') &&
-                        !keyboardContainer.contains(e.target) && 
-                        !e.target.hasAttribute('data-keyboard') &&
-                        e.target !== currentInput) {
-                        hideKeyboard();
-                    }
-                }, 100);
+                const keyboardContainer = document.getElementById('keyboardContainer');
+                
+                // Don't close if clicking on keyboard itself or on an input field
+                if (keyboardContainer && 
+                    keyboardContainer.classList.contains('show') &&
+                    !keyboardContainer.contains(e.target) && 
+                    !e.target.hasAttribute('data-keyboard')) {
+                    hideKeyboard();
+                }
             });
 
             // Register Service Worker for PWA
