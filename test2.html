@@ -18,9 +18,6 @@
     <!-- Barcode Scanner Library -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
-    <!-- Simple Keyboard CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/css/index.css">
-
     <style>
         * {
             margin: 0;
@@ -1798,97 +1795,6 @@
             display: none !important;
         }
 
-        /* Virtual Keyboard Styles */
-        .keyboard-container {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-            z-index: 10001;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
-            max-height: 50vh;
-            overflow: hidden;
-        }
-        
-        /* Shift login box up when keyboard is visible */
-        .login-container.keyboard-active .login-box {
-            transform: translateY(-25vh);
-            transition: transform 0.3s ease;
-        }
-
-        .keyboard-container.show {
-            transform: translateY(0);
-        }
-
-        .keyboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .keyboard-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #495057;
-        }
-
-        .keyboard-close {
-            background: none;
-            border: none;
-            font-size: 24px;
-            color: #6c757d;
-            cursor: pointer;
-            padding: 0;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
-
-        .keyboard-close:hover {
-            background: #e9ecef;
-            color: #495057;
-        }
-
-        .simple-keyboard {
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 10px;
-        }
-
-        .simple-keyboard.hg-theme-default {
-            background: white;
-        }
-
-        .simple-keyboard .hg-button {
-            height: 50px;
-            font-size: 18px;
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            border-radius: 8px;
-            font-weight: 500;
-        }
-
-        .simple-keyboard .hg-button:active {
-            background: #2a5298;
-            color: white;
-        }
-
-        /* Hide native keyboard on iOS */
-        input[data-keyboard="true"] {
-            caret-color: transparent;
-        }
-
         /* Prevent zoom on input focus (iOS) */
         input {
             font-size: 16px !important;
@@ -1905,9 +1811,7 @@
                    id="personnelNumber" 
                    placeholder="Personalnummer" 
                    maxlength="10"
-                   inputmode="none"
-                   data-keyboard="true"
-                   data-keyboard-type="numeric">
+                   inputmode="numeric">
             <button class="btn-primary" onclick="login()" id="loginBtn">Anmelden</button>
         </div>
     </div>
@@ -1944,141 +1848,7 @@
         </div>
     </div>
 
-    <!-- Virtual Keyboard -->
-    <div id="keyboardContainer" class="keyboard-container">
-        <div class="keyboard-header">
-            <span class="keyboard-title" id="keyboardTitle">Tastatur</span>
-            <button class="keyboard-close" onclick="hideKeyboard()">×</button>
-        </div>
-        <div id="keyboard" class="simple-keyboard"></div>
-    </div>
-
-    <!-- Simple Keyboard JS -->
-    <script src="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/index.js"></script>
-
     <script>
-        // Virtual Keyboard Setup
-        let keyboard = null;
-        let currentInput = null;
-
-        function initKeyboard() {
-            keyboard = new window.SimpleKeyboard.default({
-                onChange: input => onChange(input),
-                onKeyPress: button => onKeyPress(button),
-                layout: {
-                    default: [
-                        "1 2 3 4 5 6 7 8 9 0",
-                        "q w e r t z u i o p ü",
-                        "a s d f g h j k l ö ä",
-                        "{shift} y x c v b n m {backspace}",
-                        "{space}"
-                    ],
-                    shift: [
-                        "! \" § $ % & / ( ) =",
-                        "Q W E R T Z U I O P Ü",
-                        "A S D F G H J K L Ö Ä",
-                        "{shift} Y X C V B N M {backspace}",
-                        "{space}"
-                    ],
-                    numeric: [
-                        "1 2 3",
-                        "4 5 6",
-                        "7 8 9",
-                        "{backspace} 0 {enter}"
-                    ]
-                },
-                display: {
-                    "{backspace}": "⌫",
-                    "{enter}": "↵",
-                    "{shift}": "⇧",
-                    "{space}": "Leerzeichen"
-                },
-                theme: "hg-theme-default",
-                buttonTheme: [
-                    {
-                        class: "hg-blue",
-                        buttons: "{enter}"
-                    }
-                ]
-            });
-        }
-
-        function onChange(input) {
-            if (currentInput) {
-                currentInput.value = input;
-                currentInput.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        }
-
-        function onKeyPress(button) {
-            if (button === "{shift}") {
-                handleShift();
-            } else if (button === "{enter}") {
-                hideKeyboard();
-                if (currentInput) {
-                    currentInput.blur();
-                }
-            }
-        }
-
-        function handleShift() {
-            let currentLayout = keyboard.options.layoutName;
-            let shiftToggle = currentLayout === "default" ? "shift" : "default";
-            keyboard.setOptions({
-                layoutName: shiftToggle
-            });
-        }
-
-        function showKeyboard(input) {
-            currentInput = input;
-            const keyboardType = input.getAttribute('data-keyboard-type');
-
-            if (!keyboard) {
-                initKeyboard();
-            }
-
-            // Set layout based on input type
-            if (keyboardType === 'numeric') {
-                keyboard.setOptions({
-                    layoutName: 'numeric'
-                });
-                document.getElementById('keyboardTitle').textContent = 'Nummernfeld';
-            } else {
-                keyboard.setOptions({
-                    layoutName: 'default'
-                });
-                document.getElementById('keyboardTitle').textContent = 'Tastatur';
-            }
-
-            keyboard.setInput(input.value);
-            document.getElementById('keyboardContainer').classList.add('show');
-            
-            // Shift login screen up if keyboard is shown on login
-            const loginScreen = document.getElementById('loginScreen');
-            if (loginScreen && !loginScreen.classList.contains('hidden')) {
-                loginScreen.classList.add('keyboard-active');
-            }
-
-            // Prevent native keyboard on iOS/PWA
-            input.setAttribute('readonly', 'readonly');
-            input.blur();
-            setTimeout(() => {
-                input.removeAttribute('readonly');
-                input.focus();
-            }, 100);
-        }
-
-        function hideKeyboard() {
-            document.getElementById('keyboardContainer').classList.remove('show');
-            
-            // Remove keyboard-active class from login screen
-            const loginScreen = document.getElementById('loginScreen');
-            if (loginScreen) {
-                loginScreen.classList.remove('keyboard-active');
-            }
-            
-            currentInput = null;
-        }
 
         // Global State
         let state = {
@@ -2550,9 +2320,7 @@
                            id="quantityInput" 
                            min="1" 
                            max="999"
-                           inputmode="none"
-                           data-keyboard="true"
-                           data-keyboard-type="numeric">
+                           inputmode="numeric">
                     <button class="btn-primary animate-slide-up stagger-3" onclick="submitManualQuantity()">${t('confirm')}</button>
                 </div>
             `;
@@ -2910,9 +2678,7 @@
                                 type="text"
                                 id="manualBarcodeInput"
                                 placeholder="Barcode eingeben"
-                                inputmode="none"
-                                data-keyboard="true"
-                                data-keyboard-type="default"
+                                inputmode="text"
                                 onkeypress="if(event.key === 'Enter') submitManualBarcode()"
                             />
                         </div>
@@ -3235,9 +3001,7 @@
                             class="standards-input"
                             id="newDefectInput-${type}"
                             placeholder="Neues Fehlermerkmal für ${label} eingeben"
-                            inputmode="none"
-                            data-keyboard="true"
-                            data-keyboard-type="default"
+                            inputmode="text"
                             onkeypress="if(event.key === 'Enter') addDefectType('${type}')"
                         />
                         <button class="add-defect-btn" onclick="addDefectType('${type}')">+ Fehlermerkmal hinzufügen</button>
@@ -3267,9 +3031,7 @@
                                 id="containerCapacity"
                                 value="${standards.containerCapacity}"
                                 placeholder="Anzahl Teile pro Behälter"
-                                inputmode="none"
-                                data-keyboard="true"
-                                data-keyboard-type="numeric"
+                                inputmode="numeric"
                             />
                         </div>
 
@@ -3722,38 +3484,6 @@
             // Enable Enter key for login
             document.getElementById('personnelNumber').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') login();
-            });
-
-            // Attach keyboard to all inputs with data-keyboard attribute
-            document.addEventListener('focusin', (e) => {
-                if (e.target.hasAttribute('data-keyboard')) {
-                    e.preventDefault();
-                    e.target.blur();
-                    setTimeout(() => {
-                        showKeyboard(e.target);
-                    }, 50);
-                }
-            });
-            
-            // Additional click handler for PWA/iOS
-            document.addEventListener('click', (e) => {
-                if (e.target.hasAttribute('data-keyboard') && !e.target.hasAttribute('readonly')) {
-                    e.preventDefault();
-                    e.target.blur();
-                    setTimeout(() => {
-                        showKeyboard(e.target);
-                    }, 50);
-                }
-            });
-
-            // Close keyboard when clicking outside
-            document.addEventListener('click', (e) => {
-                const keyboardContainer = document.getElementById('keyboardContainer');
-                if (keyboardContainer && 
-                    !keyboardContainer.contains(e.target) && 
-                    !e.target.hasAttribute('data-keyboard')) {
-                    hideKeyboard();
-                }
             });
 
             // Register Service Worker for PWA
