@@ -3530,10 +3530,8 @@
                 }
             });
             
-            // Focus input on load (helps iOS keyboard)
-            setTimeout(() => {
-                personnelInput.focus();
-            }, 300);
+            // DON'T auto-focus - let user tap manually (iOS workaround)
+            // Some iPads block keyboard if auto-focused on page load
 
             // Register Service Worker for PWA
             if ('serviceWorker' in navigator) {
